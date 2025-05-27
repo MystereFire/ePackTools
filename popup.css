@@ -1,0 +1,211 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #223836;
+  color: #fff;
+}
+
+.container {
+  width: 420px;
+  padding: 20px;
+  background-color: #223836;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+h1,
+h2 {
+  color: #fff;
+  margin: 10px 0;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.button-group button {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 12px;
+  background-color: #85F028;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.button-group button:hover {
+  background-color: #4CAF50;
+  transform: translateY(-2px);
+}
+
+.button-group button i {
+  font-size: 22px;
+}
+
+#loader {
+  display: none;
+  margin-top: 10px;
+  color: white;
+  font-size: 14px;
+}
+
+#output {
+  margin-top: 20px;
+  white-space: pre-wrap;
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #f9f9f9;
+  color: #000;
+  border-radius: 5px;
+  font-size: 14px;
+  display: none;
+}
+
+#client-info {
+  margin-top: 20px;
+  text-align: left;
+  background-color: #e8f0fe;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  word-break: break-word;
+  font-family: monospace;
+  color: #000;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.footer a {
+  color: #85F028;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+#sondes-panel,
+#main-panel {
+  transition: all 0.2s ease;
+}
+
+#sonde-login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+#sonde-login-form input {
+  width: 80%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+#sonde-login-form button {
+  background-color: #85F028;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#sonde-login-form button:hover {
+  background-color: #4CAF50;
+}
+
+#sonde-ids {
+  width: 100%;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  margin: 10px 0;
+  resize: vertical;
+}
+
+#verifierSondes {
+  background-color: #85F028;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#verifierSondes:hover {
+  background-color: #4CAF50;
+}
+
+#sonde-resultats {
+  list-style: none;
+  margin-top: 15px;
+  padding-left: 0;
+  text-align: left;
+  color: #fff;
+}
+
+#sonde-resultats li {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.output-message {
+  margin-top: 15px;
+  white-space: pre-wrap;
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.button-row button {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  color: white;
+  background-color: #85F028;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-row button:hover {
+  background-color: #4CAF50;
+}
