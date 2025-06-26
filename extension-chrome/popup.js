@@ -388,14 +388,6 @@ document.getElementById("openParam").addEventListener("click", () => {
         .replace(/[_\s]+/g, "")
         .toLowerCase();
 
-    const integratorCode = name => {
-      const parts = name.split(/[_\s]+/).filter(Boolean);
-      if (parts.length === 0) return "";
-      const first = parts[0];
-      const last = parts.slice(1).join("");
-      return (first[0] + last).toLowerCase();
-    };
-
     const client = data.paramData[0].client;
     const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
 
@@ -428,12 +420,10 @@ document.getElementById("openParam").addEventListener("click", () => {
           const tds = row.querySelectorAll("td");
           const zoneCellText = tds[4]?.textContent?.trim() || "";
           const nameCellText = tds[2]?.textContent?.trim() || "";
-          const rowIntegrator = integratorCode(nameCellText);
-          const targetIntegrator = integratorCode(integrator || "");
 
           if (
             normalize(zoneCellText) === normalize(zone) &&
-            (!integrator || rowIntegrator === targetIntegrator)
+            (!integrator || normalize(nameCellText).includes(normalize(integrator)))
           ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
             if (link) {
@@ -460,7 +450,103 @@ document.getElementById("openParam").addEventListener("click", () => {
       // Résumé
       let summary = `✅ ${successCount} zone(s) ouverte(s).\n`;
       if (failCount > 0) {
-@@ -542,41 +560,43 @@ document.addEventListener("DOMContentLoaded", () => {
+        summary += `❌ ${failCount} zone(s) introuvable(s) : ${failedZones.join(", ")}`;
+        updateOutput(summary, "error");
+      } else {
+        updateOutput(summary, "success");
+      }
+
+    } catch (err) {
+      console.error(`❌ Erreur réseau pour ${client} :`, err);
+      updateOutput(`Erreur lors de la recherche pour ${client}`, "error");
+    } finally {
+      hideLoader();
+    }
+  });
+});
+
+// 🧠 Tout faire
+document.getElementById("doAll").addEventListener("click", () => {
+  document.getElementById("createSolution").click();
+  setTimeout(() => {
+    document.getElementById("createUser").click();
+  }, 3000);
+  setTimeout(() => {
+    document.getElementById("openParam").click();
+  }, 6000);
+});
+
+// 🔗 Tout connecter
+document.getElementById("connectAll").addEventListener("click", () => {
+  showLoader("Association en cours...");
+  chrome.storage.local.get(["solutionId", "paramIds", "userId"], data => {
+    const { solutionId, paramIds, userId } = data;
+    if (!solutionId || !Array.isArray(paramIds) || paramIds.length === 0 || !userId) {
+      updateOutput("ID manquant pour la connexion.", "error");
+      hideLoader();
+      return;
+    }
+
+    getBOSSID(async BOSSID => {
+      if (!BOSSID) {
+        updateOutput("Le cookie BOSSID est introuvable.", "error");
+        hideLoader();
+        return;
+      }
+
+      const paramErrors = [];
+      for (const pid of paramIds) {
+        try {
+          const body = new URLSearchParams({ solutionId });
+          const res = await fetchWithCookie(
+            `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+            'POST',
+            BOSSID,
+            { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+          );
+          if (!res.ok) paramErrors.push(pid);
+        } catch (err) {
+          paramErrors.push(pid);
+        }
+      }
+
+      let userError = null;
+      try {
+        const body = new URLSearchParams({
+          referer: 'epack_manager_user_show',
+          solutionId
+        });
+        const userRes = await fetchWithCookie(
+          `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}`,
+          'POST',
+          BOSSID,
+          { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        );
+        if (!userRes.ok) userError = `user association -> ${userRes.status}`;
+      } catch (err) {
+        userError = err.message;
+      }
+
+      if (!userError && paramErrors.length === 0) {
+        updateOutput("Associations réalisées avec succès !", "success");
+      } else if (!userError) {
+        updateOutput(`Utilisateur associé mais paramètres en échec : ${paramErrors.join(', ')}`, "error");
+      } else {
+        updateOutput(`Erreur association utilisateur : ${userError}`, "error");
+      }
+
+      hideLoader();
+    });
+  });
+});
+
+
+// Afficher données à l'ouverture
+document.addEventListener("DOMContentLoaded", () => {
+  chrome.storage.local.get(["partnerData", "managerData", "paramData"], (data) => {
+    const container = document.getElementById("client-info");
     let html = "";
 
     // 🏢 Client
