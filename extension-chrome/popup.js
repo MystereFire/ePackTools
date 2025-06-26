@@ -551,7 +551,7 @@ document.getElementById("openParam").addEventListener("click", () => {
   });
 });
 
-// 🧠 Tout faire
+// 🧠 Tout créer
 document.getElementById("doAll").addEventListener("click", () => {
   document.getElementById("createSolution").click();
   setTimeout(() => {
