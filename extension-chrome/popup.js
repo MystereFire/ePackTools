@@ -19,17 +19,17 @@ function updateOutput(message, type = "info") {
   outputDiv.innerHTML = message;
 }
 
-function getPHPSESSID(callback) {
-  chrome.cookies.get({ url: 'https://backoffice.epack-manager.com', name: 'PHPSESSID' }, function (cookie) {
+function getBOSSID(callback) {
+  chrome.cookies.get({ url: 'https://backoffice.epack-manager.com', name: 'BOSSID' }, function (cookie) {
     callback(cookie ? cookie.value : null);
   });
 }
 
-function fetchWithCookie(url, method, phpsessid, headers = {}, body = null) {
+function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
   return fetch(url, {
     method,
     headers: {
-      'Cookie': `PHPSESSID=${phpsessid}`,
+      'Cookie': `BOSSID=${BOSSID}`,
       ...headers,
     },
     body,
@@ -64,8 +64,8 @@ function splitName(name) {
   return { nom, prenom };
 }
 
-function createUser(phpsessid, userData) {
-  fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'GET', phpsessid)
+function createUser(BOSSID, userData) {
+  fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'GET', BOSSID)
     .then(response => response.text())
     .then(html => {
       const parser = new DOMParser();
@@ -91,7 +91,7 @@ function createUser(phpsessid, userData) {
         'user[user_type]': '1',
       });
 
-      fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'POST', phpsessid, { 'Content-Type': 'application/x-www-form-urlencoded' }, body)
+      fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body)
         .then(response => {
           if (response.ok) {
             updateOutput("Utilisateur créé avec succès !", "success");
@@ -275,9 +275,9 @@ document.getElementById("createSolution").addEventListener("click", function () 
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
   showLoader("Création de la solution...");
 
-  getPHPSESSID(phpsessid => {
-    if (!phpsessid) {
-      updateOutput("Le cookie PHPSESSID est introuvable.", "error");
+  getBOSSID(BOSSID => {
+    if (!BOSSID) {
+      updateOutput("Le cookie BOSSID est introuvable.", "error");
       btn.disabled = false;
       btn.innerHTML = `<i class="fas fa-desktop"></i>`;
       hideLoader();
@@ -294,7 +294,7 @@ document.getElementById("createSolution").addEventListener("click", function () 
       }
 
       const client = data.partnerData;
-      fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', phpsessid)
+      fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID)
         .then(response => response.text())
         .then(html => {
           const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -315,7 +315,7 @@ document.getElementById("createSolution").addEventListener("click", function () 
             'solution[ville]': client.city || 'TEST'
           });
 
-          return fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', phpsessid, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
+          return fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
         })
         .then(response => {
           updateOutput("Solution créée avec succès !", "success");
@@ -349,13 +349,13 @@ document.getElementById("createUser").addEventListener("click", () => {
         chrome.tabs.create({ url: `https://backoffice.epack-manager.com/epack/manager/user/${userId}`, active: false });
         hideLoader();
       } else {
-        getPHPSESSID(phpsessid => {
-          if (!phpsessid) {
-            updateOutput("Le cookie PHPSESSID est introuvable.", "error");
+        getBOSSID(BOSSID => {
+          if (!BOSSID) {
+            updateOutput("Le cookie BOSSID est introuvable.", "error");
             hideLoader();
             return;
           }
-          createUser(phpsessid, { email, name, mobile, function: userFunction });
+          createUser(BOSSID, { email, name, mobile, function: userFunction });
         });
       }
     });
