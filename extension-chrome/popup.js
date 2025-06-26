@@ -382,7 +382,11 @@ document.getElementById("openParam").addEventListener("click", () => {
     }
 
     const normalize = str =>
-      str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+      str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[_\s]+/g, "")
+        .toLowerCase();
 
     const client = data.paramData[0].client;
     const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
@@ -406,7 +410,7 @@ document.getElementById("openParam").addEventListener("click", () => {
       const usedIndexes = new Set();
       const paramIds = [];
 
-      for (const { zone } of data.paramData) {
+      for (const { zone, integrator } of data.paramData) {
         let found = false;
 
         for (let i = 0; i < rows.length; i++) {
@@ -415,8 +419,12 @@ document.getElementById("openParam").addEventListener("click", () => {
           const row = rows[i];
           const tds = row.querySelectorAll("td");
           const zoneCellText = tds[4]?.textContent?.trim() || "";
+          const nameCellText = tds[2]?.textContent?.trim() || "";
 
-          if (normalize(zoneCellText) === normalize(zone)) {
+          if (
+            normalize(zoneCellText) === normalize(zone) &&
+            (!integrator || normalize(nameCellText).includes(normalize(integrator)))
+          ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
             if (link) {
               const fullUrl = `https://backoffice.epack-manager.com${link}`;
@@ -564,7 +572,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.paramData.length > 0 && typeof data.paramData[0] === "object") {
         html += `🧩 <strong style="color:#223836;">Paramètres détectés</strong><br>
     <ul style="margin: 4px 0 0 16px; padding: 0;">` +
-          data.paramData.map(p => `<li>🔸 ${p.client} – ${p.zone}</li>`).join("") +
+          data.paramData
+            .map(p => `<li>🔸 ${p.client} (${p.integrator || '-'}) – ${p.zone}</li>`)
+            .join("") +
           `</ul>`;
       } else {
         html += `🧩 <strong style="color:#223836;">Paramètres détectés</strong><br>
