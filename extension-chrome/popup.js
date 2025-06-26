@@ -159,6 +159,11 @@ document.getElementById("backToMain").addEventListener("click", () => {
   document.getElementById("main-panel").style.display = "block";
 });
 
+document.getElementById("toggleLogin").addEventListener("click", () => {
+  const section = document.getElementById("login-section");
+  section.style.display = section.style.display === "none" ? "block" : "none";
+});
+
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(["sondeEmail", "sondePassword"], (data) => {
@@ -227,8 +232,8 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
   }
 
   chrome.storage.local.get(["bluconsoleToken", "bluconsoleRToken"], (data) => {
-    const token = data.bluconsoleToken;
-    const rtoken = data.bluconsoleRToken;
+    let token = data.bluconsoleToken;
+    let rtoken = data.bluconsoleRToken;
 
     if (!token || !rtoken) {
       updateSondeOutput("❌ Token manquant. Connectez-vous d'abord.", "error");
@@ -255,8 +260,7 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
           ? `http://blulog.ligma.fr/api/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
           : `http://blulog.ligma.fr/api/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
 
-        return fetch(url)
-          .then(res => res.json())
+        return fetchWithAuthRetry(url, creds => { token = creds.token; rtoken = creds.rtoken; })
           .then(data => {
             if (isHub) {
               const row = data?.Result?.Rows?.[0];
@@ -286,6 +290,52 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
   });
 });
 
+async function relogin() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(["sondeEmail", "sondePassword"], creds => {
+      const { sondeEmail, sondePassword } = creds;
+      if (!sondeEmail || !sondePassword) {
+        updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
+        return reject(new Error("missing credentials"));
+      }
+      fetch("http://blulog.ligma.fr/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: sondeEmail, password: sondePassword })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.token && data.refreshToken) {
+            chrome.storage.local.set({
+              bluconsoleToken: data.token,
+              bluconsoleRToken: data.refreshToken,
+              bluconsoleUser: data.user
+            }, () => resolve({ token: data.token, rtoken: data.refreshToken }));
+          } else {
+            reject(new Error("login failed"));
+          }
+        })
+        .catch(err => reject(err));
+    });
+  });
+}
+
+async function fetchWithAuthRetry(url, updateTokens) {
+  let res = await fetch(url);
+  if (res.status === 401) {
+    try {
+      const creds = await relogin();
+      if (updateTokens) updateTokens(creds);
+      const u = new URL(url);
+      u.searchParams.set('token', creds.token);
+      u.searchParams.set('rtoken', creds.rtoken);
+      res = await fetch(u.toString());
+    } catch (e) {
+      // ignore, return original response
+    }
+  }
+  return res.json();
+}
 
 
 function updateSondeOutput(message, type = "info") {

@@ -32,20 +32,24 @@
     </div>
 
     <div id="sondes-panel" style="display: none;">
-      <h2>🧪 Paramètres de connexion</h2>
-      <form id="sonde-login-form">
-        <input type="email" id="sonde-email" placeholder="Adresse email" required />
-        <input type="password" id="sonde-password" placeholder="Mot de passe" required />
-        <div class="button-row">
-          <button type="submit" id="saveSonde"><i class="fas fa-save"></i> Enregistrer</button>
-          <button type="button" id="testConnexion"><i class="fas fa-plug"></i> Tester</button>
-        </div>
-      </form>
+      <div class="credentials-header">
+        <button id="backToMain"><i class="fas fa-arrow-left"></i> Retour</button>
+        <button id="toggleLogin"><i class="fas fa-user"></i> Identifiants</button>
+      </div>
+
+      <div id="login-section" style="display:none;">
+        <h2>🧪 Paramètres de connexion</h2>
+        <form id="sonde-login-form">
+          <input type="email" id="sonde-email" placeholder="Adresse email" required />
+          <input type="password" id="sonde-password" placeholder="Mot de passe" required />
+          <div class="button-row">
+            <button type="submit" id="saveSonde"><i class="fas fa-save"></i> Enregistrer</button>
+            <button type="button" id="testConnexion"><i class="fas fa-plug"></i> Tester</button>
+          </div>
+        </form>
+      </div>
 
       <div id="sonde-output" class="output-message" style="display:none;"></div>
-      <button id="backToMain" style="margin-top: 20px;">
-        <i class="fas fa-arrow-left"></i> Retour
-      </button>
       <h3>🔍 Vérification de sondes</h3>
       <textarea id="sonde-ids" rows="6" placeholder="ID sonde par ligne"></textarea>
       <button id="verifierSondes"><i class="fas fa-search"></i> Vérifier</button>
