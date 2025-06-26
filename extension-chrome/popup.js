@@ -46,6 +46,7 @@ function checkIfUserExists(email, callback) {
       const userIdCell = doc.querySelector('table.table-bordered tr.color td:first-child');
       if (userIdCell) {
         const userId = userIdCell.textContent.trim();
+        chrome.storage.local.set({ userId });
         callback(userId);
       } else {
         callback(null);
@@ -94,6 +95,10 @@ function createUser(BOSSID, userData) {
       fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body)
         .then(response => {
           if (response.ok) {
+            const match = response.url.match(/user\/(\d+)/);
+            if (match) {
+              chrome.storage.local.set({ userId: match[1] });
+            }
             updateOutput("Utilisateur créé avec succès !", "success");
             chrome.tabs.create({ url: response.url, active: false });
           } else {
@@ -318,6 +323,10 @@ document.getElementById("createSolution").addEventListener("click", function () 
           return fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
         })
         .then(response => {
+          const match = response.url.match(/solution\/(\d+)/);
+          if (match) {
+            chrome.storage.local.set({ solutionId: match[1] });
+          }
           updateOutput("Solution créée avec succès !", "success");
           chrome.tabs.create({ url: response.url, active: false });
         })
@@ -395,6 +404,7 @@ document.getElementById("openParam").addEventListener("click", () => {
       }
 
       const usedIndexes = new Set();
+      const paramIds = [];
 
       for (const { zone } of data.paramData) {
         let found = false;
@@ -411,6 +421,8 @@ document.getElementById("openParam").addEventListener("click", () => {
             if (link) {
               const fullUrl = `https://backoffice.epack-manager.com${link}`;
               chrome.tabs.create({ url: fullUrl, active: false });
+              const id = link.split('/').pop();
+              paramIds.push(id);
               usedIndexes.add(i);
               successCount++;
               found = true;
@@ -424,6 +436,8 @@ document.getElementById("openParam").addEventListener("click", () => {
           failedZones.push(zone);
         }
       }
+
+      chrome.storage.local.set({ paramIds });
 
       // Résumé
       let summary = `✅ ${successCount} zone(s) ouverte(s).\n`;
@@ -452,6 +466,52 @@ document.getElementById("doAll").addEventListener("click", () => {
   setTimeout(() => {
     document.getElementById("openParam").click();
   }, 6000);
+});
+
+// 🔗 Tout connecter
+document.getElementById("connectAll").addEventListener("click", () => {
+  showLoader("Association en cours...");
+  chrome.storage.local.get(["solutionId", "paramIds", "userId"], data => {
+    const { solutionId, paramIds, userId } = data;
+    if (!solutionId || !Array.isArray(paramIds) || paramIds.length === 0 || !userId) {
+      updateOutput("ID manquant pour la connexion.", "error");
+      hideLoader();
+      return;
+    }
+
+    getBOSSID(async BOSSID => {
+      if (!BOSSID) {
+        updateOutput("Le cookie BOSSID est introuvable.", "error");
+        hideLoader();
+        return;
+      }
+
+      try {
+        for (const pid of paramIds) {
+          const body = new URLSearchParams({ solutionId });
+          await fetchWithCookie(
+            `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+            'POST',
+            BOSSID,
+            { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+          );
+        }
+
+        await fetchWithCookie(
+          `https://backoffice.epack-manager.com/epack/manager/user/${userId}?solutionId=${solutionId}`,
+          'GET',
+          BOSSID
+        );
+
+        updateOutput("Associations réalisées avec succès !", "success");
+      } catch (err) {
+        updateOutput(`Erreur association : ${err.message}`, "error");
+      } finally {
+        hideLoader();
+      }
+    });
+  });
 });
 
 
