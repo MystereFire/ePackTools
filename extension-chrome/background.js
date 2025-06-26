@@ -154,10 +154,13 @@ function fetchFiles(requestBody) {
 
         // Format attendu : v5-INTÉGRATEUR-CLIENT-ZONE
         if (parts.length === 4 && parts[0] === "v5") {
+          const integrator = parts[1];
           const client = parts[2];
           const zone = parts[3];
-          console.log(`📦 Param détecté — Client: ${client}, Zone: ${zone} ← ${filename}`);
-          extractedParams.push({ client, zone });
+          console.log(
+            `📦 Param détecté — Integrateur: ${integrator}, Client: ${client}, Zone: ${zone} ← ${filename}`
+          );
+          extractedParams.push({ integrator, client, zone });
         }
       }
 
