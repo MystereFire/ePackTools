@@ -42,7 +42,7 @@ app.use((req, res, next) => {
 
 
 // 🔐 Login Bluconsole
-app.post('/api/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -78,7 +78,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // 📡 Vérifier une sonde
-app.get('/api/verifier-sonde', async (req, res) => {
+app.get('/verifier-sonde', async (req, res) => {
   const { id, token, rtoken } = req.query;
 
   if (!id || !token || !rtoken) {
@@ -109,7 +109,7 @@ app.get('/api/verifier-sonde', async (req, res) => {
 });
 
 // 📡 Vérifier un hub
-app.get('/api/verifier-hub', async (req, res) => {
+app.get('/verifier-hub', async (req, res) => {
   const { id, token, rtoken } = req.query;
 
   if (!id || !token || !rtoken) {

@@ -199,7 +199,7 @@ document.getElementById("testConnexion").addEventListener("click", () => {
     return;
   }
 
-  fetch("http://blulog.ligma.fr/api/login", {
+  fetch("https://api.ligma.fr/blulog/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
@@ -257,8 +257,8 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
 
         const isHub = cleanId.startsWith("0");
         const url = isHub
-          ? `http://blulog.ligma.fr/api/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
-          : `http://blulog.ligma.fr/api/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
+          ? `https://api.ligma.fr/blulog/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
+          : `https://api.ligma.fr/blulog/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
 
         return fetchWithAuthRetry(url, creds => { token = creds.token; rtoken = creds.rtoken; })
           .then(data => {
@@ -298,7 +298,7 @@ async function relogin() {
         updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
         return reject(new Error("missing credentials"));
       }
-      fetch("http://blulog.ligma.fr/api/login", {
+      fetch("https://api.ligma.fr/blulog/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: sondeEmail, password: sondePassword })
