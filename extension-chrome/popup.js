@@ -505,11 +505,15 @@ document.getElementById("connectAll").addEventListener("click", () => {
 
       let userError = null;
       try {
-        const body = new URLSearchParams({ solutionId });
+        const body = new URLSearchParams({
+          referer: 'epack_manager_user_show',
+          solutionId
+        });
         const userRes = await fetchWithCookie(
-          `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}?solutionId=${solutionId}&all`,
+          `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}`,
           'POST',
           BOSSID,
+          { 'Content-Type': 'application/x-www-form-urlencoded' },
           body
         );
         if (!userRes.ok) userError = `user association -> ${userRes.status}`;
