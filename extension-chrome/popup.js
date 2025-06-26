@@ -486,8 +486,9 @@ document.getElementById("connectAll").addEventListener("click", () => {
         return;
       }
 
-      try {
-        for (const pid of paramIds) {
+      const paramErrors = [];
+      for (const pid of paramIds) {
+        try {
           const body = new URLSearchParams({ solutionId });
           const res = await fetchWithCookie(
             `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
@@ -496,9 +497,14 @@ document.getElementById("connectAll").addEventListener("click", () => {
             { 'Content-Type': 'application/x-www-form-urlencoded' },
             body
           );
-          if (!res.ok) throw new Error(`addSolutionToConfiguration ${pid} -> ${res.status}`);
+          if (!res.ok) paramErrors.push(pid);
+        } catch (err) {
+          paramErrors.push(pid);
         }
+      }
 
+      let userError = null;
+      try {
         const body = new URLSearchParams({ solutionId });
         const userRes = await fetchWithCookie(
           `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}?solutionId=${solutionId}&all`,
@@ -506,15 +512,20 @@ document.getElementById("connectAll").addEventListener("click", () => {
           BOSSID,
           body
         );
-        if (!userRes.ok) throw new Error(`user association -> ${userRes.status}`);
-        return updateOutput(`${userId}?solutionId=${solutionId}`)
-
-        updateOutput("Associations réalisées avec succès !", "success");
+        if (!userRes.ok) userError = `user association -> ${userRes.status}`;
       } catch (err) {
-        updateOutput(`Erreur association : ${err.message}`, "error");
-      } finally {
-        hideLoader();
+        userError = err.message;
       }
+
+      if (!userError && paramErrors.length === 0) {
+        updateOutput("Associations réalisées avec succès !", "success");
+      } else if (!userError) {
+        updateOutput(`Utilisateur associé mais paramètres en échec : ${paramErrors.join(', ')}`, "error");
+      } else {
+        updateOutput(`Erreur association utilisateur : ${userError}`, "error");
+      }
+
+      hideLoader();
     });
   });
 });
