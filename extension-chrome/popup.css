@@ -224,3 +224,11 @@ h2 {
 .button-row button:hover {
   background-color: var(--primary-hover);
 }
+
+.zone-input {
+  margin-left: 4px;
+  width: 120px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
