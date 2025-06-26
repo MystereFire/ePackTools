@@ -89,7 +89,7 @@ h2 {
   border-radius: 5px;
   border: 1px solid #ccc;
   font-size: 14px;
-  line-height: 1.2;
+  line-height: 1;
   word-break: break-word;
   font-family: monospace;
   color: #000;
@@ -97,7 +97,7 @@ h2 {
 
 #client-info li {
   margin-bottom: 2px;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .footer {

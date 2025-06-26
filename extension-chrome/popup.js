@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const c = data.partnerData;
       html += `🏢 <strong style="color:#223836;">Client</strong><br>
 🔹 Nom : ${c.name || "-"}<br>
-🔹 Adresse : ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}<br><br>`;
+🔹 Adresse : ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}<br>`;
     }
 
     // 👤 Manager
@@ -476,7 +476,7 @@ document.addEventListener("DOMContentLoaded", () => {
 🔹 Nom : ${u.name || "-"}<br>
 🔹 Fonction : ${u.function || "-"}<br>
 🔹 Téléphone : ${u.mobile || "-"}<br>
-🔹 Email : ${u.email || "-"}<br><br>`;
+🔹 Email : ${u.email || "-"}<br>`;
     }
 
     // 🧩 Paramètres
