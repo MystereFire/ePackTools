@@ -19,6 +19,25 @@ function updateOutput(message, type = "info") {
   outputDiv.innerHTML = message;
 }
 
+// Utilities ---------------------------------------------------------------
+
+function normalizeText(str) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_\s]+/g, "")
+    .toLowerCase();
+}
+
+function integratorKey(name) {
+  if (!name) return "";
+  const parts = name.replace(/_/g, " ").trim().split(/\s+/);
+  if (parts.length === 0) return "";
+  const prenomInitial = parts[0][0] || "";
+  const nom = parts.slice(1).join("");
+  return normalizeText(prenomInitial + nom);
+}
+
 function getBOSSID(callback) {
   chrome.cookies.get({ url: 'https://backoffice.epack-manager.com', name: 'BOSSID' }, function (cookie) {
     callback(cookie ? cookie.value : null);
@@ -374,19 +393,14 @@ document.getElementById("createUser").addEventListener("click", () => {
 // 🧩 Ouvrir les paramètres
 document.getElementById("openParam").addEventListener("click", () => {
   showLoader("Chargement des paramètres...");
-  chrome.storage.local.get("paramData", async (data) => {
+  chrome.storage.local.get(["paramData", "managerData"], async (data) => {
     if (!data.paramData || !Array.isArray(data.paramData)) {
       updateOutput("Aucune donnée paramData valide trouvée.", "error");
       hideLoader();
       return;
     }
 
-    const normalize = str =>
-      str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[_\s]+/g, "")
-        .toLowerCase();
+    const managerKey = data.managerData ? integratorKey(data.managerData.name) : "";
 
     const client = data.paramData[0].client;
     const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
@@ -421,9 +435,12 @@ document.getElementById("openParam").addEventListener("click", () => {
           const zoneCellText = tds[4]?.textContent?.trim() || "";
           const nameCellText = tds[2]?.textContent?.trim() || "";
 
+          const rowKey = integratorKey(nameCellText);
+          const expectedKey = managerKey || integratorKey(integrator);
+
           if (
-            normalize(zoneCellText) === normalize(zone) &&
-            (!integrator || normalize(nameCellText).includes(normalize(integrator)))
+            normalizeText(zoneCellText) === normalizeText(zone) &&
+            (!expectedKey || rowKey === expectedKey)
           ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
             if (link) {
