@@ -262,11 +262,11 @@ function updateSondeOutput(message, type = "info") {
 
   outputDiv.style.display = "block";
   outputDiv.style.backgroundColor = type === "success" ? "#d4edda" :
-                                    type === "error" ? "#f8d7da" :
-                                    "#f9f9f9";
+    type === "error" ? "#f8d7da" :
+      "#f9f9f9";
   outputDiv.style.borderColor = type === "success" ? "#c3e6cb" :
-                                 type === "error" ? "#f5c6cb" :
-                                 "#ccc";
+    type === "error" ? "#f5c6cb" :
+      "#ccc";
 
   outputDiv.textContent = message;
 }
@@ -499,12 +499,15 @@ document.getElementById("connectAll").addEventListener("click", () => {
           if (!res.ok) throw new Error(`addSolutionToConfiguration ${pid} -> ${res.status}`);
         }
 
+        const body = new URLSearchParams({ solutionId });
         const userRes = await fetchWithCookie(
-          `https://backoffice.epack-manager.com/epack/manager/user/${userId}?solutionId=${solutionId}&all`,
-          'GET',
-          BOSSID
+          `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}?solutionId=${solutionId}&all`,
+          'POST',
+          BOSSID,
+          body
         );
         if (!userRes.ok) throw new Error(`user association -> ${userRes.status}`);
+        return updateOutput(`${userId}?solutionId=${solutionId}`)
 
         updateOutput("Associations réalisées avec succès !", "success");
       } catch (err) {
