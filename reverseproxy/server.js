@@ -10,6 +10,18 @@ const { exec } = require('child_process');
 const app = express();
 const port = 4002;
 
+// ❤️ Health check route
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    db: 'unknown'
+  };
+
+  return res.status(200).json(health);
+});
+
 // ✅ Middleware CORS global
 app.use(cors());
 app.use((req, res, next) => {
