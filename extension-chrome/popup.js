@@ -388,6 +388,14 @@ document.getElementById("openParam").addEventListener("click", () => {
         .replace(/[_\s]+/g, "")
         .toLowerCase();
 
+    const integratorCode = name => {
+      const parts = name.split(/[_\s]+/).filter(Boolean);
+      if (parts.length === 0) return "";
+      const first = parts[0];
+      const last = parts.slice(1).join("");
+      return (first[0] + last).toLowerCase();
+    };
+
     const client = data.paramData[0].client;
     const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
 
@@ -420,10 +428,12 @@ document.getElementById("openParam").addEventListener("click", () => {
           const tds = row.querySelectorAll("td");
           const zoneCellText = tds[4]?.textContent?.trim() || "";
           const nameCellText = tds[2]?.textContent?.trim() || "";
+          const rowIntegrator = integratorCode(nameCellText);
+          const targetIntegrator = integratorCode(integrator || "");
 
           if (
             normalize(zoneCellText) === normalize(zone) &&
-            (!integrator || normalize(nameCellText).includes(normalize(integrator)))
+            (!integrator || rowIntegrator === targetIntegrator)
           ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
             if (link) {
