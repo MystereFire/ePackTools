@@ -562,6 +562,14 @@ document.getElementById("doAll").addEventListener("click", () => {
   }, 6000);
 });
 
+// 🤖 Tout faire
+document.getElementById("doEverything").addEventListener("click", () => {
+  document.getElementById("doAll").click();
+  setTimeout(() => {
+    document.getElementById("connectAll").click();
+  }, 9000);
+});
+
 // 🔗 Tout connecter
 document.getElementById("connectAll").addEventListener("click", () => {
   showLoader("Association en cours...");
