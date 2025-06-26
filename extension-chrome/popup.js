@@ -31,12 +31,20 @@ function normalizeText(str) {
 
 function integratorKey(name) {
   if (!name) return "";
-  const parts = name.replace(/_/g, " ").trim().split(/\s+/);
-  if (parts.length === 0) return "";
+  const cleanName = name.replace(/_/g, " ").trim();
+  const parts = cleanName.split(/\s+/);
+
+  // Cas 1 : Un seul mot
+  if (parts.length === 1) {
+    return normalizeText(parts[0]);
+  }
+
+  // Cas 2 : Plusieurs mots
   const prenomInitial = parts[0][0] || "";
   const nom = parts.slice(1).join("");
   return normalizeText(prenomInitial + nom);
 }
+
 
 function keysMatch(a, b) {
   if (!a || !b) return false;
@@ -441,7 +449,7 @@ document.getElementById("openParam").addEventListener("click", () => {
           const nameCellText = tds[2]?.textContent?.trim() || "";
 
           const rowKey = integratorKey(nameCellText);
-          const expectedKey = managerKey || integratorKey(integrator);
+          const expectedKey = integratorKey(integrator);
 
           if (
             normalizeText(zoneCellText) === normalizeText(zone) &&
