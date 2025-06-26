@@ -489,20 +489,22 @@ document.getElementById("connectAll").addEventListener("click", () => {
       try {
         for (const pid of paramIds) {
           const body = new URLSearchParams({ solutionId });
-          await fetchWithCookie(
+          const res = await fetchWithCookie(
             `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
             'POST',
             BOSSID,
             { 'Content-Type': 'application/x-www-form-urlencoded' },
             body
           );
+          if (!res.ok) throw new Error(`addSolutionToConfiguration ${pid} -> ${res.status}`);
         }
 
-        await fetchWithCookie(
-          `https://backoffice.epack-manager.com/epack/manager/user/${userId}?solutionId=${solutionId}`,
+        const userRes = await fetchWithCookie(
+          `https://backoffice.epack-manager.com/epack/manager/user/${userId}?solutionId=${solutionId}&all`,
           'GET',
           BOSSID
         );
+        if (!userRes.ok) throw new Error(`user association -> ${userRes.status}`);
 
         updateOutput("Associations réalisées avec succès !", "success");
       } catch (err) {
