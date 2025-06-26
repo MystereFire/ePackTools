@@ -1,3 +1,5 @@
+importScripts('logger.js');
+
 let firstReadRequestCaptured = false;
 let shouldCaptureRequest = true;
 let shouldCaptureDataRequest = true;
@@ -6,7 +8,6 @@ function resetCaptureFlags() {
   shouldCaptureRequest = true;
   firstReadRequestCaptured = false;
   shouldCaptureDataRequest = true;
-  console.log("🔄 Flags de capture réinitialisés.");
 }
 
 function extractThirdValueFromFilename(filename) {
@@ -16,13 +17,11 @@ function extractThirdValueFromFilename(filename) {
 
 function cleanData() {
   chrome.storage.local.remove(["clientData", "userData", "paramData"], () => {
-    console.log("🗑️ Données supprimées du stockage local.");
   });
 }
 
 function storeData(key, data) {
   chrome.storage.local.set({ [key]: data }, () => {
-    console.log(`💾 Données ${key} stockées :`, data);
   });
 }
 
@@ -63,17 +62,17 @@ function fetchResPartner(id, label) {
       if (!result) return;
 
       if (result.is_company && label === "client") {
-        console.log("🏢 Client détecté :", result.name);
+        logger.success(`Client détecté : ${result.name}`);
         storeData("partnerData", result);
       } else if (!result.is_company && label === "manager") {
-        console.log("👤 Manager détecté :", result.name);
+        logger.success(`Manager détecté : ${result.name}`);
         storeData("managerData", result);
       } else {
-        console.warn(`⚠️ Type inattendu pour ${label} (${result.name})`);
+        logger.warn(`Type inattendu pour ${label} (${result.name})`);
         storeData(label === "client" ? "partnerData" : "managerData", result); // fallback
       }
     })
-    .catch(error => console.error(`❌ Erreur duplicate res.partner.read (${label}) :`, error));
+    .catch(error => logger.error(`Erreur duplicate res.partner.read (${label}) : ${error}`));
 }
 
 function fetchIdFromOrder(orderId) {
@@ -113,20 +112,20 @@ function fetchIdFromOrder(orderId) {
       const managerId = order.x_contact_manager?.[0];
 
       if (partnerId) {
-        console.log("👤 partner_id récupéré :", partnerId);
+        logger.info(`partner_id récupéré : ${partnerId}`);
         fetchResPartner(partnerId, "client");
       } else {
-        console.warn("❌ partner_id non trouvé.");
+        logger.warn('partner_id non trouvé.');
       }
 
       if (managerId) {
-        console.log("👤 x_contact_manager récupéré :", managerId);
+        logger.info(`x_contact_manager récupéré : ${managerId}`);
         fetchResPartner(managerId, "manager");
       } else {
-        console.warn("❌ x_contact_manager non trouvé.");
+        logger.warn('x_contact_manager non trouvé.');
       }
     })
-    .catch(err => console.error("❌ Erreur lors de la requête sale.order.read :", err));
+    .catch(err => logger.error(`Erreur lors de la requête sale.order.read : ${err}`));
 }
 
 function fetchFiles(requestBody) {
@@ -142,7 +141,7 @@ function fetchFiles(requestBody) {
       const attachments = data.result?.attachments || [];
 
       if (attachments.length === 0) {
-        console.log("❌ Aucune pièce jointe trouvée.");
+        logger.warn('Aucune pièce jointe trouvée.');
         return;
       }
 
@@ -157,20 +156,18 @@ function fetchFiles(requestBody) {
           const integrator = parts[1];
           const client = parts[2];
           const zone = parts[3];
-          console.log(
-            `📦 Param détecté — Integrateur: ${integrator}, Client: ${client}, Zone: ${zone} ← ${filename}`
-          );
+          logger.info(`Param détecté — Integrateur: ${integrator}, Client: ${client}, Zone: ${zone} ← ${filename}`);
           extractedParams.push({ integrator, client, zone });
         }
       }
 
-      if (extractedParams.length > 0) {
-        storeData("paramData", extractedParams); // stocke tableau [{client, zone}]
-      } else {
-        console.warn("❌ Aucun fichier au format attendu.");
-      }
-    })
-    .catch(error => console.error("❌ Erreur duplication mail/thread/data :", error));
+        if (extractedParams.length > 0) {
+          storeData("paramData", extractedParams); // stocke tableau [{client, zone}]
+        } else {
+          logger.warn('Aucun fichier au format attendu.');
+        }
+      })
+      .catch(error => logger.error(`Erreur duplication mail/thread/data : ${error}`));
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -185,29 +182,29 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     // 🎯 Détection commande client
     if (shouldCaptureRequest && details.url.includes("sale.order/read")) {
-      console.log("📡 Requête sale.order/read interceptée :", details.url);
+      logger.info(`Requête sale.order/read interceptée : ${details.url}`);
       shouldCaptureRequest = false;
 
       try {
         const body = details.requestBody?.raw?.map(e => new TextDecoder().decode(e.bytes)).join('');
         const orderId = JSON.parse(body).params.args[0][0];
-        console.log("🧾 orderId trouvé :", orderId);
+        logger.info(`orderId trouvé : ${orderId}`);
         fetchIdFromOrder(orderId);
       } catch (e) {
-        console.error("❌ Erreur parsing sale.order/read :", e);
+        logger.error(`Erreur parsing sale.order/read : ${e}`);
       }
     }
 
     // 📎 Détection documents pièces jointes
     else if (shouldCaptureDataRequest && details.url.includes("mail/thread/data")) {
-      console.log("📎 Requête mail/thread/data interceptée :", details.url);
+      logger.info(`Requête mail/thread/data interceptée : ${details.url}`);
       shouldCaptureDataRequest = false;
 
       try {
         const body = details.requestBody?.raw?.map(e => new TextDecoder().decode(e.bytes)).join('');
         fetchFiles(body);
       } catch (e) {
-        console.error("❌ Erreur parsing mail/thread/data :", e);
+        logger.error(`Erreur parsing mail/thread/data : ${e}`);
       }
     }
   },
