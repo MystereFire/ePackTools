@@ -38,6 +38,11 @@ function integratorKey(name) {
   return normalizeText(prenomInitial + nom);
 }
 
+function keysMatch(a, b) {
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+
 function getBOSSID(callback) {
   chrome.cookies.get({ url: 'https://backoffice.epack-manager.com', name: 'BOSSID' }, function (cookie) {
     callback(cookie ? cookie.value : null);
@@ -440,7 +445,7 @@ document.getElementById("openParam").addEventListener("click", () => {
 
           if (
             normalizeText(zoneCellText) === normalizeText(zone) &&
-            (!expectedKey || rowKey === expectedKey)
+            (!expectedKey || keysMatch(rowKey, expectedKey))
           ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
             if (link) {
