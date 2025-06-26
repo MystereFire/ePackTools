@@ -2,10 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const chalk = require('chalk');
-const fs = require('fs');
-const path = require('path');
-const { exec } = require('child_process');
+const logger = require('./logger');
 
 const app = express();
 const port = 4002;
@@ -36,7 +33,7 @@ app.use(bodyParser.json());
 
 // 🧾 Logger Middleware
 app.use((req, res, next) => {
-  console.log(`${chalk.gray(new Date().toISOString())} ${chalk.cyan(req.method)} ${chalk.white(req.originalUrl)} ${chalk.yellow('from')} ${chalk.magenta(req.ip)}`);
+  logger.info(`${req.method} ${req.originalUrl} from ${req.ip}`);
   next();
 });
 
@@ -46,7 +43,7 @@ app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    console.warn(chalk.yellow("⚠️  Email ou mot de passe manquant"));
+    logger.warn('Email ou mot de passe manquant');
     return res.status(400).json({ error: 'Email et mot de passe requis.' });
   }
 
@@ -59,18 +56,18 @@ app.post('/login', async (req, res) => {
     });
 
     if (response.data?.Result?.Token) {
-      console.log(chalk.green(`✅ Login réussi pour ${email}`));
+      logger.success(`Login réussi pour ${email}`);
       return res.json({
         token: response.data.Result.Token,
         refreshToken: response.data.Result.RefreshToken,
         user: response.data.Result.UserData
       });
     } else {
-      console.warn(chalk.red("❌ Login refusé"));
+      logger.warn('Login refusé');
       return res.status(401).json({ error: 'Identifiants invalides.' });
     }
   } catch (err) {
-    console.error(chalk.red("🔥 Erreur login:"), err.message);
+    logger.error(`Erreur login: ${err.message}`);
     return res.status(err.response?.status || 500).json({
       error: err.response?.data || err.message
     });
@@ -82,7 +79,7 @@ app.get('/verifier-sonde', async (req, res) => {
   const { id, token, rtoken } = req.query;
 
   if (!id || !token || !rtoken) {
-    console.warn(chalk.yellow("⚠️  Données manquantes (sonde)"));
+    logger.warn('Données manquantes (sonde)');
     return res.status(400).json({ error: 'LoggerSerialNumber, token et rtoken requis.' });
   }
 
@@ -98,10 +95,10 @@ app.get('/verifier-sonde', async (req, res) => {
         }
       }
     );
-    console.log(chalk.magenta(`🔎 Vérification sonde ${id} → ${response.data?.Result?.Rows?.length || 0} résultat(s)`));
+    logger.info(`Vérification sonde ${id} → ${response.data?.Result?.Rows?.length || 0} résultat(s)`);
     return res.json(response.data);
   } catch (err) {
-    console.error(chalk.red(`🔥 Erreur sonde ${id}`), err.message);
+    logger.error(`Erreur sonde ${id}: ${err.message}`);
     return res.status(err.response?.status || 500).json({
       error: err.response?.data || err.message
     });
@@ -113,7 +110,7 @@ app.get('/verifier-hub', async (req, res) => {
   const { id, token, rtoken } = req.query;
 
   if (!id || !token || !rtoken) {
-    console.warn(chalk.yellow("⚠️  Données manquantes (hub)"));
+    logger.warn('Données manquantes (hub)');
     return res.status(400).json({ error: 'LoggerSerialNumber, token et rtoken requis.' });
   }
 
@@ -129,10 +126,10 @@ app.get('/verifier-hub', async (req, res) => {
         }
       }
     );
-    console.log(chalk.blue(`📡 Vérification hub ${id} → ${response.data?.Result?.Rows?.length || 0} résultat(s)`));
+    logger.info(`Vérification hub ${id} → ${response.data?.Result?.Rows?.length || 0} résultat(s)`);
     return res.json(response.data);
   } catch (err) {
-    console.error(chalk.red(`🔥 Erreur hub ${id}`), err.message);
+    logger.error(`Erreur hub ${id}: ${err.message}`);
     return res.status(err.response?.status || 500).json({
       error: err.response?.data || err.message
     });
@@ -141,5 +138,5 @@ app.get('/verifier-hub', async (req, res) => {
 
 // ▶️ Lancement
 app.listen(port, () => {
-  console.log(chalk.bold.green(`🚀 Proxy Bluconsole en ligne : http://localhost:${port}`));
+  logger.success(`Proxy Bluconsole en ligne : http://localhost:${port}`);
 });
