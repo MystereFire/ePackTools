@@ -614,10 +614,14 @@ document.getElementById("doAll").addEventListener("click", () => {
 
 // 🤖 Tout faire
 document.getElementById("doEverything").addEventListener("click", () => {
-  document.getElementById("doAll").click();
-  setTimeout(() => {
-    document.getElementById("connectAll").click();
-  }, 9000);
+  // Nettoyer d'abord le storage pour éviter de mélanger les données
+  const keysToRemove = ["solutionMap", "solutionId", "paramMap", "paramIds", "userId"];
+  chrome.storage.local.remove(keysToRemove, () => {
+    document.getElementById("doAll").click();
+    setTimeout(() => {
+      document.getElementById("connectAll").click();
+    }, 9000);
+  });
 });
 
 // 🔗 Tout connecter
