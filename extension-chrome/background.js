@@ -25,6 +25,10 @@ function storeData(key, data) {
   });
 }
 
+function generateId() {
+  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+}
+
 function fetchResPartner(id, label) {
   const url = "https://chr-num.odoo.com/web/dataset/call_kw/res.partner/read";
   const headers = {
@@ -157,7 +161,7 @@ function fetchFiles(requestBody) {
           const client = parts[2];
           const zone = parts[3];
           logger.info(`Param détecté — Integrateur: ${integrator}, Client: ${client}, Zone: ${zone} ← ${filename}`);
-          extractedParams.push({ integrator, client, zone });
+          extractedParams.push({ id: generateId(), integrator, client, zone });
         }
       }
 
