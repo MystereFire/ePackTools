@@ -388,10 +388,10 @@ document.getElementById("createSolution").addEventListener("click", function () 
       const hasZones = Array.isArray(data.paramData) && data.paramData.length > 1;
 
       if (hasZones) {
-        const zones = data.paramData.map(p => p.zone);
         const solutionMap = {};
 
-        for (const zoneName of zones) {
+        for (const param of data.paramData) {
+          const zoneName = param.zone;
           try {
             const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -415,7 +415,7 @@ document.getElementById("createSolution").addEventListener("click", function () 
             const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
             const match = response.url.match(/solution\/(\d+)/);
             if (match) {
-              solutionMap[zoneName] = match[1];
+              solutionMap[param.id] = match[1];
               chrome.tabs.create({ url: response.url, active: false });
             }
           } catch (err) {
@@ -424,10 +424,13 @@ document.getElementById("createSolution").addEventListener("click", function () 
         }
 
         chrome.storage.local.set({ solutionMap });
-        if (Object.keys(solutionMap).length === zones.length) {
+        if (Object.keys(solutionMap).length === data.paramData.length) {
           updateOutput("Solutions créées avec succès !", "success");
         } else {
-          const failed = zones.filter(z => !solutionMap[z]).join(', ');
+          const failed = data.paramData
+            .filter(p => !solutionMap[p.id])
+            .map(p => p.zone)
+            .join(', ');
           updateOutput(`Solutions incomplètes : ${failed}`, "error");
         }
       } else {
@@ -535,7 +538,8 @@ document.getElementById("openParam").addEventListener("click", () => {
       const paramMap = {};
       const paramIds = [];
 
-      for (const { zone, integrator } of data.paramData) {
+      for (const param of data.paramData) {
+        const { zone, integrator, id: paramId } = param;
         let found = false;
 
         for (let i = 0; i < rows.length; i++) {
@@ -559,7 +563,7 @@ document.getElementById("openParam").addEventListener("click", () => {
               chrome.tabs.create({ url: fullUrl, active: false });
               const id = link.split('/').pop();
               if (multipleZones) {
-                paramMap[zone] = id;
+                paramMap[paramId] = id;
               } else {
                 paramIds.push(id);
               }
@@ -627,8 +631,8 @@ document.getElementById("doEverything").addEventListener("click", () => {
 // 🔗 Tout connecter
 document.getElementById("connectAll").addEventListener("click", () => {
   showLoader("Association en cours...");
-  chrome.storage.local.get(["solutionMap", "solutionId", "paramMap", "paramIds", "userId"], data => {
-    const { solutionMap, solutionId, paramMap, paramIds, userId } = data;
+  chrome.storage.local.get(["solutionMap", "solutionId", "paramMap", "paramIds", "userId", "paramData"], data => {
+    const { solutionMap, solutionId, paramMap, paramIds, userId, paramData } = data;
     const multipleZones = solutionMap && paramMap;
     if (multipleZones) {
       if (!userId) {
@@ -649,12 +653,17 @@ document.getElementById("connectAll").addEventListener("click", () => {
         return;
       }
 
+      const idToZone = {};
+      if (Array.isArray(paramData)) {
+        for (const p of paramData) idToZone[p.id] = p.zone;
+      }
+
       const paramErrors = [];
       if (multipleZones) {
-        for (const [zone, pid] of Object.entries(paramMap)) {
-          const sid = solutionMap[zone];
+        for (const [pidKey, pid] of Object.entries(paramMap)) {
+          const sid = solutionMap[pidKey];
           if (!sid) {
-            paramErrors.push(zone);
+            paramErrors.push(pidKey);
             continue;
           }
           try {
@@ -666,9 +675,9 @@ document.getElementById("connectAll").addEventListener("click", () => {
               { 'Content-Type': 'application/x-www-form-urlencoded' },
               body
             );
-            if (!res.ok) paramErrors.push(zone);
+            if (!res.ok) paramErrors.push(pidKey);
           } catch (err) {
-            paramErrors.push(zone);
+            paramErrors.push(pidKey);
           }
         }
       } else {
@@ -713,7 +722,8 @@ document.getElementById("connectAll").addEventListener("click", () => {
       if (!userError && paramErrors.length === 0) {
         updateOutput("Associations réalisées avec succès !", "success");
       } else if (!userError) {
-        updateOutput(`Utilisateur associé mais paramètres en échec : ${paramErrors.join(', ')}`, "error");
+        const displayErr = paramErrors.map(id => idToZone[id] || id).join(', ');
+        updateOutput(`Utilisateur associé mais paramètres en échec : ${displayErr}`, "error");
       } else {
         updateOutput(`Erreur association utilisateur : ${userError}`, "error");
       }
