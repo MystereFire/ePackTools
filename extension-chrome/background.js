@@ -16,7 +16,7 @@ function extractThirdValueFromFilename(filename) {
 }
 
 function cleanData() {
-  chrome.storage.local.remove(["clientData", "userData", "paramData"], () => {
+  chrome.storage.local.remove(["partnerData", "managerData", "paramData"], () => {
   });
 }
 
@@ -188,6 +188,8 @@ chrome.webRequest.onBeforeRequest.addListener(
     if (shouldCaptureRequest && details.url.includes("sale.order/read")) {
       logger.info(`Requête sale.order/read interceptée : ${details.url}`);
       shouldCaptureRequest = false;
+      // Clear previously stored data when a new quote is detected
+      cleanData();
 
       try {
         const body = details.requestBody?.raw?.map(e => new TextDecoder().decode(e.bytes)).join('');
