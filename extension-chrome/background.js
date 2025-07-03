@@ -161,7 +161,15 @@ function fetchFiles(requestBody) {
           const client = parts[2];
           const zone = parts[3];
           logger.info(`Param détecté — Integrateur: ${integrator}, Client: ${client}, Zone: ${zone} ← ${filename}`);
-          extractedParams.push({ id: generateId(), integrator, client, zone });
+          // zone corresponds to the name found in the attachment. We store it as
+          // both the default value (originalZone) and the editable zone label.
+          extractedParams.push({
+            id: generateId(),
+            integrator,
+            client,
+            zone,
+            originalZone: zone,
+          });
         }
       }
 

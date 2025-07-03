@@ -539,7 +539,8 @@ document.getElementById("openParam").addEventListener("click", () => {
       const paramIds = [];
 
       for (const param of data.paramData) {
-        const { zone, integrator, id: paramId } = param;
+        const { zone, integrator, id: paramId, originalZone } = param;
+        const searchZone = originalZone || zone;
         let found = false;
 
         for (let i = 0; i < rows.length; i++) {
@@ -554,7 +555,7 @@ document.getElementById("openParam").addEventListener("click", () => {
           const expectedKey = integratorKey(integrator);
 
           if (
-            normalizeText(zoneCellText) === normalizeText(zone) &&
+            normalizeText(zoneCellText) === normalizeText(searchZone) &&
             (!expectedKey || keysMatch(rowKey, expectedKey))
           ) {
             const link = row.querySelector("a[href]")?.getAttribute("href");
