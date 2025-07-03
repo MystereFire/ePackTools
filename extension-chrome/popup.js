@@ -1,7 +1,6 @@
 
 // Fonctions UX dans scripts/popup-ui.js
 
-const DEFAULT_PROXY_URL = 'https://api.ligma.fr/blulog';
 let proxyURL = DEFAULT_PROXY_URL;
 
 // Utilitaires ---------------------------------------------------------------
