@@ -1,7 +1,8 @@
 
 // Fonctions UX dans scripts/popup-ui.js
 
-let proxyURL = DEFAULT_PROXY_URL;
+// proxyURL is defined in scripts/sondes.js
+
 
 // Utilitaires ---------------------------------------------------------------
 
