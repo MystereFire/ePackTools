@@ -1,15 +1,20 @@
 // Fonctions de vérification des sondes et hubs
 
+const DEFAULT_PROXY_URL = 'https://api.ligma.fr/blulog';
+let proxyURL = DEFAULT_PROXY_URL;
+chrome.storage.local.get('proxyURL', data => { if (data.proxyURL) proxyURL = data.proxyURL; });
+
 // Réauthentifie l'utilisateur BluConsole si besoin
 function relogin() {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["sondeEmail", "sondePassword"], creds => {
-      const { sondeEmail, sondePassword } = creds;
+    chrome.storage.local.get(["sondeEmail", "sondePassword", "proxyURL"], creds => {
+      const { sondeEmail, sondePassword, proxyURL: storedProxy } = creds;
+      if (storedProxy) proxyURL = storedProxy;
       if (!sondeEmail || !sondePassword) {
         updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
         return reject(new Error("missing credentials"));
       }
-      fetch("https://api.ligma.fr/blulog/login", {
+      fetch(`${proxyURL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: sondeEmail, password: sondePassword })
@@ -59,9 +64,10 @@ function verifierSondes() {
     return;
   }
 
-  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRToken"], data => {
+  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRToken", "proxyURL"], data => {
     let token = data.bluconsoleToken;
     let rtoken = data.bluconsoleRToken;
+    if (data.proxyURL) proxyURL = data.proxyURL;
 
     if (!token || !rtoken) {
       updateSondeOutput("❌ Token manquant. Connectez-vous d'abord.", "error");
@@ -85,8 +91,8 @@ function verifierSondes() {
 
         const isHub = cleanId.startsWith("0");
         const url = isHub
-          ? `https://api.ligma.fr/blulog/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
-          : `https://api.ligma.fr/blulog/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
+          ? `${proxyURL}/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
+          : `${proxyURL}/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
 
         return fetchWithAuthRetry(url, creds => { token = creds.token; rtoken = creds.rtoken; })
           .then(data => {
