@@ -1,6 +1,8 @@
 
 // Fonctions UX dans scripts/popup-ui.js
 
+const DEFAULT_PROXY_URL = 'https://api.ligma.fr/blulog';
+let proxyURL = DEFAULT_PROXY_URL;
 
 // Utilitaires ---------------------------------------------------------------
 
@@ -149,12 +151,18 @@ document.getElementById("toggleLogin").addEventListener("click", () => {
 
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.local.get(["sondeEmail", "sondePassword"], (data) => {
+  chrome.storage.local.get(["sondeEmail", "sondePassword", "proxyURL"], (data) => {
     if (data.sondeEmail) {
       document.getElementById("sonde-email").value = data.sondeEmail;
     }
     if (data.sondePassword) {
       document.getElementById("sonde-password").value = data.sondePassword;
+    }
+    if (data.proxyURL) {
+      proxyURL = data.proxyURL;
+      document.getElementById("proxy-url").value = data.proxyURL;
+    } else {
+      document.getElementById("proxy-url").value = DEFAULT_PROXY_URL;
     }
   });
 });
@@ -164,10 +172,13 @@ document.getElementById("sonde-login-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const email = document.getElementById("sonde-email").value.trim();
   const password = document.getElementById("sonde-password").value.trim();
+  const pUrl = document.getElementById("proxy-url").value.trim() || DEFAULT_PROXY_URL;
+  proxyURL = pUrl;
 
   chrome.storage.local.set({
     sondeEmail: email,
-    sondePassword: password
+    sondePassword: password,
+    proxyURL: pUrl
   }, () => {
     updateSondeOutput("🧪 Identifiants enregistrés avec succès !", "success");
   });
@@ -182,7 +193,7 @@ document.getElementById("testConnexion").addEventListener("click", () => {
     return;
   }
 
-  fetch("https://api.ligma.fr/blulog/login", {
+  fetch(`${proxyURL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
@@ -195,7 +206,7 @@ document.getElementById("testConnexion").addEventListener("click", () => {
           bluconsoleRToken: data.refreshToken,
           bluconsoleUser: data.user
         });
-        updateSondeOutput("✅ Connexion réussie via proxy local !", "success");
+        updateSondeOutput(`✅ Connexion réussie via proxy ${proxyURL}!`, "success");
       } else {
         updateSondeOutput("❌ Connexion échouée : identifiants invalides.", "error");
       }
