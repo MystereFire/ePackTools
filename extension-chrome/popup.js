@@ -1,25 +1,8 @@
 
-// Fonctions UX améliorées
-function showLoader(msg = "Chargement...") {
-  const loader = document.getElementById("loader");
-  loader.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${msg}`;
-  loader.style.display = "block";
-}
+// Fonctions UX dans scripts/popup-ui.js
 
-function hideLoader() {
-  document.getElementById("loader").style.display = "none";
-}
 
-function updateOutput(message, type = "info") {
-  const outputDiv = document.getElementById("output");
-  outputDiv.style.display = "block";
-  outputDiv.style.color = "#333";
-  outputDiv.style.backgroundColor = type === "success" ? "#d4edda" : type === "error" ? "#f8d7da" : "#f9f9f9";
-  outputDiv.style.borderColor = type === "success" ? "#c3e6cb" : type === "error" ? "#f5c6cb" : "#ccc";
-  outputDiv.innerHTML = message;
-}
-
-// Utilities ---------------------------------------------------------------
+// Utilitaires ---------------------------------------------------------------
 
 function normalizeText(str) {
   return str
@@ -223,137 +206,8 @@ document.getElementById("testConnexion").addEventListener("click", () => {
 });
 
 document.getElementById("verifierSondes").addEventListener("click", () => {
-  const textarea = document.getElementById("sonde-ids");
-  let rawLines = textarea.value.split("\n");
-
-  if (rawLines.length === 0) {
-    updateSondeOutput("Veuillez entrer au moins un ID.", "error");
-    return;
-  }
-
-  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRToken"], (data) => {
-    let token = data.bluconsoleToken;
-    let rtoken = data.bluconsoleRToken;
-
-    if (!token || !rtoken) {
-      updateSondeOutput("❌ Token manquant. Connectez-vous d'abord.", "error");
-      return;
-    }
-
-    // Nettoie les lignes de départ
-    rawLines = rawLines.map(line =>
-      line.split(" ")[0].trim().replace(/\s+/g, "")
-    );
-
-    // On garde la structure pour update ligne par ligne
-    const updatedLines = [...rawLines];
-
-    Promise.all(
-      rawLines.map((cleanId, index) => {
-        if (!cleanId) {
-          updatedLines[index] = ""; // ignore vide
-          return Promise.resolve();
-        }
-
-        const isHub = cleanId.startsWith("0");
-        const url = isHub
-          ? `https://api.ligma.fr/blulog/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
-          : `https://api.ligma.fr/blulog/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
-
-        return fetchWithAuthRetry(url, creds => { token = creds.token; rtoken = creds.rtoken; })
-          .then(data => {
-            if (isHub) {
-              const row = data?.Result?.Rows?.[0];
-              const emoji = row ? "✅" : "❌";
-              const info = row
-                ? ` (${row.ConnectionStatus}, ${row.Status}, ${row.LastRequestAt || "-"})`
-                : "";
-              updatedLines[index] = `${cleanId} ${emoji}${info}`;
-            } else {
-              const row = data?.Result?.Rows?.[0];
-              const emoji = row ? "✅" : "❌";
-              const temp = row?.Temperature?.Value || "?";
-              const battery = row?.Battery || "-";
-              const info = row
-                ? ` (Temp: ${temp}, Battery: ${battery})`
-                : "";
-              updatedLines[index] = `${cleanId} ${emoji}${info}`;
-            }
-          })
-          .catch(() => {
-            updatedLines[index] = `${cleanId} ❌`;
-          });
-      })
-    ).then(() => {
-      textarea.value = updatedLines.filter(Boolean).join("\n");
-    });
-  });
+  sondeUtils.verifierSondes();
 });
-
-async function relogin() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["sondeEmail", "sondePassword"], creds => {
-      const { sondeEmail, sondePassword } = creds;
-      if (!sondeEmail || !sondePassword) {
-        updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
-        return reject(new Error("missing credentials"));
-      }
-      fetch("https://api.ligma.fr/blulog/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: sondeEmail, password: sondePassword })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.token && data.refreshToken) {
-            chrome.storage.local.set({
-              bluconsoleToken: data.token,
-              bluconsoleRToken: data.refreshToken,
-              bluconsoleUser: data.user
-            }, () => resolve({ token: data.token, rtoken: data.refreshToken }));
-          } else {
-            reject(new Error("login failed"));
-          }
-        })
-        .catch(err => reject(err));
-    });
-  });
-}
-
-async function fetchWithAuthRetry(url, updateTokens) {
-  let res = await fetch(url);
-  if (res.status === 401) {
-    try {
-      const creds = await relogin();
-      if (updateTokens) updateTokens(creds);
-      const u = new URL(url);
-      u.searchParams.set('token', creds.token);
-      u.searchParams.set('rtoken', creds.rtoken);
-      res = await fetch(u.toString());
-    } catch (e) {
-      // ignore, return original response
-    }
-  }
-  return res.json();
-}
-
-
-function updateSondeOutput(message, type = "info") {
-  const outputDiv = document.getElementById("sonde-output");
-  if (!outputDiv) return;
-
-  outputDiv.style.display = "block";
-  outputDiv.style.backgroundColor = type === "success" ? "#d4edda" :
-    type === "error" ? "#f8d7da" :
-      "#f9f9f9";
-  outputDiv.style.borderColor = type === "success" ? "#c3e6cb" :
-    type === "error" ? "#f5c6cb" :
-      "#ccc";
-
-  outputDiv.textContent = message;
-}
-
-
 
 // Créer une solution
 document.getElementById("createSolution").addEventListener("click", function () {
