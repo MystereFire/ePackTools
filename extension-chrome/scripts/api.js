@@ -84,14 +84,14 @@ function fetchIdFromOrder(orderId) {
       const order = data.result?.[0];
       if (!order) return;
 
-      const partnerId = order.partner_id?.[0];
+      const clientUtilisateurId = order.x_client_utilisateur?.[0];
       const managerId = order.x_contact_manager?.[0];
 
-      if (partnerId) {
-        logger.info(`partner_id récupéré : ${partnerId}`);
-        fetchResPartner(partnerId, "client");
+      if (clientUtilisateurId) {
+        logger.info(`x_client_utilisateur récupéré : ${clientUtilisateurId}`);
+        fetchResPartner(clientUtilisateurId, "client");
       } else {
-        logger.warn('partner_id non trouvé.');
+        logger.warn('x_client_utilisateur non trouvé.');
       }
 
       if (managerId) {
