@@ -384,14 +384,16 @@ document.getElementById('createSolution').addEventListener('click', () => {
 // 👤 Créer un utilisateur
 async function createUserAction() {
   showLoader('Recherche des données utilisateur...');
-  const data = await new Promise(r => chrome.storage.local.get('managerData', r));
+  const data = await new Promise(r => chrome.storage.local.get(['managerData', 'partnerData'], r));
   if (!data.managerData) {
     updateOutput('Aucune donnée utilisateur trouvée.', 'error');
     hideLoader();
     return;
   }
-  const { email, name, mobile, function: userFunction, country_id } = data.managerData;
-  const countryName = Array.isArray(country_id) ? country_id[1] : '';
+  const { email, name, mobile, function: userFunction } = data.managerData;
+  const clientCountry = Array.isArray(data.partnerData?.country_id)
+    ? data.partnerData.country_id[1]
+    : '';
   const userId = await new Promise(r => checkIfUserExists(email, r));
   if (userId) {
     updateOutput(`Utilisateur existant : ${userId}`, 'info');
@@ -404,7 +406,7 @@ async function createUserAction() {
       hideLoader();
       return;
     }
-    await createUser(BOSSID, { email, name, mobile, function: userFunction, country: countryName });
+    await createUser(BOSSID, { email, name, mobile, function: userFunction, country: clientCountry });
   }
 }
 
@@ -666,12 +668,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.managerData) {
       const u = data.managerData;
       const country = u.country_id ? u.country_id[1] : '';
+      const clientCountry = data.partnerData?.country_id ? data.partnerData.country_id[1] : '';
       html += `<div class="info-block"><h3>👤 Manager</h3><ul>
         <li><strong>Nom :</strong> ${u.name || "-"}</li>
         <li><strong>Fonction :</strong> ${u.function || "-"}</li>
         <li><strong>Téléphone :</strong> ${u.mobile || "-"}</li>
         <li><strong>Email :</strong> ${u.email || "-"}</li>
-        <li><strong>Langue :</strong> ${getLangFromCountry(country)}</li>
+        <li><strong>Langue :</strong> ${getLangFromCountry(clientCountry)}</li>
         <li><strong>Pays :</strong> ${country || "-"}</li>
       </ul></div>`;
     }
