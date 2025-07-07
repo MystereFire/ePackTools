@@ -84,48 +84,6 @@ function splitName(name) {
   return { nom, prenom };
 }
 
-function getLangId(code) {
-  const map = {
-    'fr_FR': '1',
-    'en_US': '2', 'en_GB': '2',
-    'it_IT': '3',
-    'de_DE': '4',
-    'pt_PT': '5', 'pt_BR': '5',
-    'es_ES': '6',
-    'pl_PL': '7',
-    'ca_ES': '8',
-    'nl_NL': '9',
-    'zh_CN': '10', 'zh_TW': '10',
-    'ar_SY': '11', 'ar_EG': '11', 'ar': '11',
-    'el_GR': '12'
-  };
-  return map[code] || '1';
-}
-
-function getLangFromCountry(country) {
-  const map = {
-    'France': 'fr_FR',
-    'Belgique': 'fr_FR',
-    'Suisse': 'fr_FR',
-    'Canada': 'en_US',
-    'États-Unis': 'en_US',
-    'Royaume-Uni': 'en_GB',
-    'Espagne': 'es_ES',
-    'Italie': 'it_IT',
-    'Allemagne': 'de_DE',
-    'Portugal': 'pt_PT',
-    'Brésil': 'pt_BR',
-    'Pays-Bas': 'nl_NL',
-    'Pologne': 'pl_PL',
-    'Chine': 'zh_CN',
-    'Grèce': 'el_GR',
-    'Arabie saoudite': 'ar_SY',
-    'Égypte': 'ar_EG',
-    'Émirats arabes unis': 'ar_SY'
-  };
-  return map[country] || 'fr_FR';
-}
-
 async function createUser(BOSSID, userData) {
   try {
     const html = await fetchWithCookie(
@@ -147,7 +105,7 @@ async function createUser(BOSSID, userData) {
       'user[_token]': tokenValue,
       'user[email]': userData.email,
       'user[jobTitle]': userData.function || '/',
-      'user[lang]': getLangId(getLangFromCountry(userData.country)),
+      'user[lang]': '1',
       'user[nom]': nom || '/',
       'user[prenom]': prenom,
       'user[telephoneMobile]': userData.mobile || '/',
@@ -390,8 +348,7 @@ async function createUserAction() {
     hideLoader();
     return;
   }
-  const { email, name, mobile, function: userFunction, country_id } = data.managerData;
-  const countryName = Array.isArray(country_id) ? country_id[1] : '';
+  const { email, name, mobile, function: userFunction } = data.managerData;
   const userId = await new Promise(r => checkIfUserExists(email, r));
   if (userId) {
     updateOutput(`Utilisateur existant : ${userId}`, 'info');
@@ -404,7 +361,7 @@ async function createUserAction() {
       hideLoader();
       return;
     }
-    await createUser(BOSSID, { email, name, mobile, function: userFunction, country: countryName });
+    await createUser(BOSSID, { email, name, mobile, function: userFunction });
   }
 }
 
@@ -658,21 +615,17 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `<div class="info-block"><h3>🏢 Client</h3><ul>
         <li><strong>Nom :</strong> ${c.name || "-"}</li>
         <li><strong>Adresse :</strong> ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}</li>
-        <li><strong>Pays :</strong> ${c.country_id ? c.country_id[1] : "-"}</li>
       </ul></div>`;
     }
 
     // 👤 Manager
     if (data.managerData) {
       const u = data.managerData;
-      const country = u.country_id ? u.country_id[1] : '';
       html += `<div class="info-block"><h3>👤 Manager</h3><ul>
         <li><strong>Nom :</strong> ${u.name || "-"}</li>
         <li><strong>Fonction :</strong> ${u.function || "-"}</li>
         <li><strong>Téléphone :</strong> ${u.mobile || "-"}</li>
         <li><strong>Email :</strong> ${u.email || "-"}</li>
-        <li><strong>Langue :</strong> ${getLangFromCountry(country)}</li>
-        <li><strong>Pays :</strong> ${country || "-"}</li>
       </ul></div>`;
     }
 

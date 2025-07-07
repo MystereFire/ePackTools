@@ -15,8 +15,7 @@ function fetchResPartner(id, label) {
     params: {
       args: [[id], [
         "name", "street", "zip", "city", "partner_latitude",
-        "partner_longitude", "function", "email", "mobile", "is_company",
-        "lang", "country_id"
+        "partner_longitude", "function", "email", "mobile", "is_company"
       ]],
       model: "res.partner",
       method: "read",
