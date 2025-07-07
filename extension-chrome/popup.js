@@ -786,6 +786,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    const doAllBtn = document.getElementById('doAll');
+    if (doAllBtn) {
+      if (anyMissing) {
+        doAllBtn.disabled = true;
+        doAllBtn.classList.add('button-error');
+      } else {
+        doAllBtn.disabled = false;
+        doAllBtn.classList.remove('button-error');
+      }
+    }
+
     const doEverythingBtn = document.getElementById('doEverything');
     if (doEverythingBtn) {
       if (anyMissing) {
