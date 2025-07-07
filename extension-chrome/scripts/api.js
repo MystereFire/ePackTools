@@ -40,13 +40,16 @@ function fetchResPartner(id, label) {
 
       if (result.is_company && label === "client") {
         logger.success(`Client détecté : ${result.name}`);
-        storageUtils.storeData("partnerData", result);
+        storageUtils.storeData("clientData", result);
       } else if (!result.is_company && label === "manager") {
         logger.success(`Manager détecté : ${result.name}`);
-        storageUtils.storeData("managerData", result);
+        storageUtils.storeData("managerInfo", result);
       } else {
         logger.warn(`Type inattendu pour ${label} (${result.name})`);
-        storageUtils.storeData(label === "client" ? "partnerData" : "managerData", result);
+        storageUtils.storeData(
+          label === "client" ? "clientData" : "managerInfo",
+          result
+        );
       }
     })
     .catch(e => logger.error(`Erreur duplicate res.partner.read (${label}) : ${e}`));
@@ -142,7 +145,7 @@ function fetchFiles(requestBody) {
       }
 
       if (extractedParams.length > 0) {
-        storageUtils.storeData("paramData", extractedParams);
+        storageUtils.storeData("parameterData", extractedParams);
       } else {
         logger.warn('Aucun fichier au format attendu.');
       }

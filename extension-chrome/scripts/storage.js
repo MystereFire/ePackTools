@@ -14,7 +14,11 @@ function resetCaptureFlags() {
 
 // Supprime les données précédemment enregistrées dans chrome.storage
 function cleanData() {
-  chrome.storage.local.remove(["partnerData", "managerData", "paramData"], () => {});
+  chrome.storage.local.remove([
+    "clientData",
+    "managerInfo",
+    "parameterData",
+  ], () => {});
 }
 
 // Enveloppe simple autour de chrome.storage.local.set

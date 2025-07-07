@@ -7,24 +7,24 @@ chrome.storage.local.get('proxyURL', data => { if (data.proxyURL) proxyURL = dat
 // Réauthentifie l'utilisateur BluConsole si besoin
 function relogin() {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["sondeEmail", "sondePassword", "proxyURL"], creds => {
-      const { sondeEmail, sondePassword, proxyURL: storedProxy } = creds;
+    chrome.storage.local.get(["probeEmail", "probePassword", "proxyURL"], creds => {
+      const { probeEmail, probePassword, proxyURL: storedProxy } = creds;
       if (storedProxy) proxyURL = storedProxy;
-      if (!sondeEmail || !sondePassword) {
+      if (!probeEmail || !probePassword) {
         updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
         return reject(new Error("missing credentials"));
       }
       fetch(`${proxyURL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: sondeEmail, password: sondePassword })
+        body: JSON.stringify({ email: probeEmail, password: probePassword })
       })
         .then(r => r.json())
         .then(data => {
           if (data.token && data.refreshToken) {
             chrome.storage.local.set({
               bluconsoleToken: data.token,
-              bluconsoleRToken: data.refreshToken,
+              bluconsoleRefreshToken: data.refreshToken,
               bluconsoleUser: data.user
             }, () => resolve({ token: data.token, rtoken: data.refreshToken }));
           } else {
@@ -64,9 +64,9 @@ function verifierSondes() {
     return;
   }
 
-  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRToken", "proxyURL"], data => {
+  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRefreshToken", "proxyURL"], data => {
     let token = data.bluconsoleToken;
-    let rtoken = data.bluconsoleRToken;
+    let rtoken = data.bluconsoleRefreshToken;
     if (data.proxyURL) proxyURL = data.proxyURL;
 
     if (!token || !rtoken) {
