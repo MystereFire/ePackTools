@@ -126,6 +126,34 @@ function getLangFromCountry(country) {
   return map[country] || 'fr_FR';
 }
 
+function getFlagEmoji(country) {
+  const codes = {
+    'France': 'FR',
+    'Belgique': 'BE',
+    'Suisse': 'CH',
+    'Canada': 'CA',
+    'États-Unis': 'US',
+    'Royaume-Uni': 'GB',
+    'Espagne': 'ES',
+    'Italie': 'IT',
+    'Allemagne': 'DE',
+    'Portugal': 'PT',
+    'Brésil': 'BR',
+    'Pays-Bas': 'NL',
+    'Pologne': 'PL',
+    'Chine': 'CN',
+    'Grèce': 'GR',
+    'Arabie saoudite': 'SA',
+    'Égypte': 'EG',
+    'Émirats arabes unis': 'AE'
+  };
+  const code = codes[country];
+  if (!code) return '';
+  const first = String.fromCodePoint(0x1F1E6 + code.charCodeAt(0) - 65);
+  const second = String.fromCodePoint(0x1F1E6 + code.charCodeAt(1) - 65);
+  return first + second;
+}
+
 async function createUser(BOSSID, userData) {
   try {
     const html = await fetchWithCookie(
@@ -660,7 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `<div class="info-block"><h3>🏢 Client</h3><ul>
         <li><strong>Nom :</strong> ${c.name || "-"}</li>
         <li><strong>Adresse :</strong> ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}</li>
-        <li><strong>Pays :</strong> ${c.country_id ? c.country_id[1] : "-"}</li>
+        <li><strong>Pays :</strong> ${c.country_id ? c.country_id[1] : "-"} ${getFlagEmoji(c.country_id ? c.country_id[1] : '')}</li>
       </ul></div>`;
     }
 
