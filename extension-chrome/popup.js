@@ -612,47 +612,49 @@ document.addEventListener("DOMContentLoaded", () => {
     // 🏢 Client
     if (data.partnerData) {
       const c = data.partnerData;
-      html += `🏢 <strong style="color:#223836;">Client</strong><br>
-🔹 Nom : ${c.name || "-"}<br>
-🔹 Adresse : ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}<br>`;
+      html += `<div class="info-block"><h3>🏢 Client</h3><ul>
+        <li><strong>Nom :</strong> ${c.name || "-"}</li>
+        <li><strong>Adresse :</strong> ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}</li>
+      </ul></div>`;
     }
 
     // 👤 Manager
     if (data.managerData) {
       const u = data.managerData;
-      html += `👤 <strong style="color:#223836;">Manager</strong><br>
-🔹 Nom : ${u.name || "-"}<br>
-🔹 Fonction : ${u.function || "-"}<br>
-🔹 Téléphone : ${u.mobile || "-"}<br>
-🔹 Email : ${u.email || "-"}<br>`;
+      html += `<div class="info-block"><h3>👤 Manager</h3><ul>
+        <li><strong>Nom :</strong> ${u.name || "-"}</li>
+        <li><strong>Fonction :</strong> ${u.function || "-"}</li>
+        <li><strong>Téléphone :</strong> ${u.mobile || "-"}</li>
+        <li><strong>Email :</strong> ${u.email || "-"}</li>
+      </ul></div>`;
     }
 
     // 🧩 Paramètres
     if (Array.isArray(data.paramData)) {
       if (data.paramData.length > 0 && typeof data.paramData[0] === "object") {
         if (data.paramData.length > 1) {
-          html += `🧩 <strong style="color:#223836;">Paramètres détectés</strong><br>
-    <ul style="margin: 4px 0 0 16px; padding: 0;">` +
+          html += `<div class="info-block"><h3>🧩 Paramètres détectés</h3><ul>` +
             data.paramData
               .map((p, idx) =>
                 `<li>🔸 ${p.client} (${p.integrator || '-'}) – <input type="text" class="zone-input" data-index="${idx}" value="${p.zone}" /></li>`
               )
               .join("") +
-            `</ul>`;
+            `</ul></div>`;
         } else {
           const p = data.paramData[0];
-          html += `🧩 <strong style="color:#223836;">Paramètre détecté</strong><br>
-    🔸 ${p.client} (${p.integrator || '-'}) – ${p.zone}`;
+          html += `<div class="info-block"><h3>🧩 Paramètre détecté</h3><ul>
+            <li>🔸 ${p.client} (${p.integrator || '-'}) – ${p.zone}</li>
+          </ul></div>`;
         }
       } else {
-        html += `🧩 <strong style="color:#223836;">Paramètres détectés</strong><br>
-    <ul style="margin: 4px 0 0 16px; padding: 0;">` +
+        html += `<div class="info-block"><h3>🧩 Paramètres détectés</h3><ul>` +
           data.paramData.map(p => `<li>🔸 ${p}</li>`).join("") +
-          `</ul>`;
+          `</ul></div>`;
       }
     } else if (data.paramData) {
-      html += `🧩 <strong style="color:#223836;">Paramètre détecté</strong><br>
-    🔸 ${data.paramData}`;
+      html += `<div class="info-block"><h3>🧩 Paramètre détecté</h3><ul>
+        <li>🔸 ${data.paramData}</li>
+      </ul></div>`;
     }
 
     container.innerHTML = html || "Aucune donnée trouvée.";
