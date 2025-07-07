@@ -1,6 +1,7 @@
 :root {
   --primary-color: #85F028;
   --primary-hover: #4CAF50;
+  --error-color: #f44336;
   --bg-dark: #223836;
   --bg-gradient: linear-gradient(135deg, #284a47, #1c2c2b);
   --text-light: #fff;
@@ -47,6 +48,11 @@ h2 {
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.button-group button.button-error {
+  background-color: var(--error-color);
+  cursor: not-allowed;
 }
 
 .button-group button:hover {
