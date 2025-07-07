@@ -735,6 +735,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.innerHTML = html || "Aucune donnée trouvée.";
 
+    const createBtn = document.getElementById('createSolution');
+    const hasClient = !!data.clientData;
+    const hasParams = Array.isArray(data.parameterData)
+      ? data.parameterData.length > 0
+      : !!data.parameterData;
+    if (createBtn) {
+      if (hasClient && hasParams) {
+        createBtn.disabled = false;
+        createBtn.classList.remove('button-error');
+      } else {
+        createBtn.disabled = true;
+        createBtn.classList.add('button-error');
+      }
+    }
+
     document.querySelectorAll('.zone-input').forEach(input => {
       input.addEventListener('input', () => {
         const idx = parseInt(input.getAttribute('data-index'), 10);
