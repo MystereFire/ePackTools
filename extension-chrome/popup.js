@@ -667,7 +667,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 👤 Manager
     if (data.managerData) {
       const u = data.managerData;
-      const country = u.country_id ? u.country_id[1] : '';
       const clientCountry = data.partnerData?.country_id ? data.partnerData.country_id[1] : '';
       html += `<div class="info-block"><h3>👤 Manager</h3><ul>
         <li><strong>Nom :</strong> ${u.name || "-"}</li>
@@ -675,7 +674,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <li><strong>Téléphone :</strong> ${u.mobile || "-"}</li>
         <li><strong>Email :</strong> ${u.email || "-"}</li>
         <li><strong>Langue :</strong> ${getLangFromCountry(clientCountry)}</li>
-        <li><strong>Pays :</strong> ${country || "-"}</li>
       </ul></div>`;
     }
 
