@@ -27,7 +27,7 @@ présentées dans la fenêtre popup de l'extension.
 - **Créer la solution** : crée une ou plusieurs solutions dans ePack Manager en se
   basant sur les données du client.
 - **Créer l'utilisateur** : crée le manager détecté comme utilisateur ePack
-  Manager en choisissant automatiquement la langue en fonction de son pays
+  Manager en choisissant automatiquement la langue selon le pays du client
   détecté.
 - **Pays détecté** : affiche également le pays du client et du manager à partir
   du champ `country_id` d'Odoo.
