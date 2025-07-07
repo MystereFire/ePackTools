@@ -735,18 +735,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.innerHTML = html || "Aucune donnée trouvée.";
 
-    const createBtn = document.getElementById('createSolution');
     const hasClient = !!data.clientData;
+    const hasManager = !!data.managerInfo;
     const hasParams = Array.isArray(data.parameterData)
       ? data.parameterData.length > 0
       : !!data.parameterData;
-    if (createBtn) {
-      if (hasClient && hasParams) {
-        createBtn.disabled = false;
-        createBtn.classList.remove('button-error');
+
+    const createSolutionBtn = document.getElementById('createSolution');
+    if (createSolutionBtn) {
+      if (hasClient) {
+        createSolutionBtn.disabled = false;
+        createSolutionBtn.classList.remove('button-error');
       } else {
-        createBtn.disabled = true;
-        createBtn.classList.add('button-error');
+        createSolutionBtn.disabled = true;
+        createSolutionBtn.classList.add('button-error');
+      }
+    }
+
+    const createUserBtn = document.getElementById('createUser');
+    if (createUserBtn) {
+      if (hasManager) {
+        createUserBtn.disabled = false;
+        createUserBtn.classList.remove('button-error');
+      } else {
+        createUserBtn.disabled = true;
+        createUserBtn.classList.add('button-error');
+      }
+    }
+
+    const openParamBtn = document.getElementById('openParam');
+    if (openParamBtn) {
+      if (hasParams) {
+        openParamBtn.disabled = false;
+        openParamBtn.classList.remove('button-error');
+      } else {
+        openParamBtn.disabled = true;
+        openParamBtn.classList.add('button-error');
+      }
+    }
+
+    const anyMissing = !hasClient || !hasManager || !hasParams;
+    const connectAllBtn = document.getElementById('connectAll');
+    if (connectAllBtn) {
+      if (anyMissing) {
+        connectAllBtn.disabled = true;
+        connectAllBtn.classList.add('button-error');
+      } else {
+        connectAllBtn.disabled = false;
+        connectAllBtn.classList.remove('button-error');
+      }
+    }
+
+    const doEverythingBtn = document.getElementById('doEverything');
+    if (doEverythingBtn) {
+      if (anyMissing) {
+        doEverythingBtn.disabled = true;
+        doEverythingBtn.classList.add('button-error');
+      } else {
+        doEverythingBtn.disabled = false;
+        doEverythingBtn.classList.remove('button-error');
       }
     }
 
