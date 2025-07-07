@@ -53,6 +53,8 @@ function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
   });
 }
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 function checkIfUserExists(email, callback) {
   const url = `https://backoffice.epack-manager.com/epack/manager/user/?search=${encodeURIComponent(email)}`;
   fetch(url, { method: 'GET', credentials: 'include' })
@@ -82,56 +84,58 @@ function splitName(name) {
   return { nom, prenom };
 }
 
-function createUser(BOSSID, userData) {
-  fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'GET', BOSSID)
-    .then(response => response.text())
-    .then(html => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const tokenValue = doc.querySelector('#user__token')?.value;
+async function createUser(BOSSID, userData) {
+  try {
+    const html = await fetchWithCookie(
+      'https://backoffice.epack-manager.com/epack/manager/user/new',
+      'GET',
+      BOSSID
+    ).then(r => r.text());
 
-      if (!tokenValue) {
-        updateOutput("Token introuvable pour création utilisateur.", "error");
-        hideLoader();
-        return;
-      }
-
-      const { nom, prenom } = splitName(userData.name);
-      const body = new URLSearchParams({
-        'user[_token]': tokenValue,
-        'user[email]': userData.email,
-        'user[jobTitle]': userData.function || '/',
-        'user[lang]': '1',
-        'user[nom]': nom || '/',
-        'user[prenom]': prenom,
-        'user[telephoneMobile]': userData.mobile || '/',
-        'user[typeContrat]': '1',
-        'user[user_type]': '1',
-      });
-
-      fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/user/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body)
-        .then(response => {
-          if (response.ok) {
-            const match = response.url.match(/user\/(\d+)/);
-            if (match) {
-              chrome.storage.local.set({ userId: match[1] });
-            }
-            updateOutput("Utilisateur créé avec succès !", "success");
-            chrome.tabs.create({ url: response.url, active: false });
-          } else {
-            updateOutput("Erreur création utilisateur.", "error");
-          }
-          hideLoader();
-        })
-        .catch(error => {
-          updateOutput(`Erreur création utilisateur : ${error.message}`, "error");
-          hideLoader();
-        });
-    })
-    .catch(error => {
-      updateOutput(`Erreur récupération token : ${error.message}`, "error");
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tokenValue = doc.querySelector('#user__token')?.value;
+    if (!tokenValue) {
+      updateOutput('Token introuvable pour création utilisateur.', 'error');
       hideLoader();
+      return;
+    }
+
+    const { nom, prenom } = splitName(userData.name);
+    const body = new URLSearchParams({
+      'user[_token]': tokenValue,
+      'user[email]': userData.email,
+      'user[jobTitle]': userData.function || '/',
+      'user[lang]': '1',
+      'user[nom]': nom || '/',
+      'user[prenom]': prenom,
+      'user[telephoneMobile]': userData.mobile || '/',
+      'user[typeContrat]': '1',
+      'user[user_type]': '1'
     });
+
+    const response = await fetchWithCookie(
+      'https://backoffice.epack-manager.com/epack/manager/user/new',
+      'POST',
+      BOSSID,
+      { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    );
+
+    if (response.ok) {
+      const match = response.url.match(/user\/(\d+)/);
+      if (match) {
+        chrome.storage.local.set({ userId: match[1] });
+      }
+      updateOutput('Utilisateur créé avec succès !', 'success');
+      chrome.tabs.create({ url: response.url, active: false });
+    } else {
+      updateOutput('Erreur création utilisateur.', 'error');
+    }
+  } catch (error) {
+    updateOutput(`Erreur création utilisateur : ${error.message}`, 'error');
+  } finally {
+    hideLoader();
+  }
 }
 
 document.getElementById("openSonde").addEventListener("click", () => {
@@ -221,280 +225,280 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
 });
 
 // Créer une solution
-document.getElementById("createSolution").addEventListener("click", function () {
-  const btn = this;
+async function createSolutionAction() {
+  const btn = document.getElementById('createSolution');
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
 
-  chrome.storage.local.get("paramData", d => {
-    const hasZones = Array.isArray(d.paramData) && d.paramData.length > 1;
-    showLoader(hasZones ? "Création des solutions..." : "Création de la solution...");
-  });
+  const d = await new Promise(r => chrome.storage.local.get('paramData', r));
+  const hasZones = Array.isArray(d.paramData) && d.paramData.length > 1;
+  showLoader(hasZones ? 'Création des solutions...' : 'Création de la solution...');
 
-  getBOSSID(async BOSSID => {
-    if (!BOSSID) {
-      updateOutput("Le cookie BOSSID est introuvable.", "error");
-      btn.disabled = false;
-      btn.innerHTML = `<i class="fas fa-desktop"></i>`;
-      hideLoader();
-      return;
+  const BOSSID = await new Promise(r => getBOSSID(r));
+  if (!BOSSID) {
+    updateOutput('Le cookie BOSSID est introuvable.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+    hideLoader();
+    return;
+  }
+
+  const data = await new Promise(r => chrome.storage.local.get(['partnerData', 'paramData'], r));
+  if (!data.partnerData) {
+    updateOutput('Aucune donnée client trouvée.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+    hideLoader();
+    return;
+  }
+
+  const client = data.partnerData;
+  const multi = Array.isArray(data.paramData) && data.paramData.length > 1;
+
+  if (multi) {
+    const solutionMap = {};
+    for (const param of data.paramData) {
+      const zoneName = param.zone;
+      try {
+        const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const token = doc.querySelector('#solution__token')?.value;
+        if (!token) throw new Error('Token manquant');
+
+        const body = new URLSearchParams({
+          'solution[_token]': token,
+          'solution[adresse]': client.street || 'TEST',
+          'solution[codePostal]': client.zip || 'TEST',
+          'solution[enseigne]': `${client.name || 'TEST'} - ${zoneName}`,
+          'solution[latitude]': client.partner_latitude || '0',
+          'solution[longitude]': client.partner_longitude || '0',
+          'solution[mac]': '',
+          'solution[statusApi]': '0',
+          'solution[ticketfile]': '1',
+          'solution[versionEpack]': '',
+          'solution[ville]': client.city || 'TEST'
+        });
+
+        const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
+        const match = response.url.match(/solution\/(\d+)/);
+        if (match) {
+          solutionMap[param.id] = match[1];
+          chrome.tabs.create({ url: response.url, active: false });
+        }
+      } catch (err) {
+        updateOutput(`Erreur création pour zone ${zoneName} : ${err.message}`, 'error');
+      }
     }
 
-    chrome.storage.local.get(["partnerData", "paramData"], async (data) => {
-      if (!data.partnerData) {
-        updateOutput("Aucune donnée client trouvée.", "error");
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-desktop"></i>`;
-        hideLoader();
-        return;
+    chrome.storage.local.set({ solutionMap });
+    if (Object.keys(solutionMap).length === data.paramData.length) {
+      updateOutput('Solutions créées avec succès !', 'success');
+    } else {
+      const failed = data.paramData.filter(p => !solutionMap[p.id]).map(p => p.zone).join(', ');
+      updateOutput(`Solutions incomplètes : ${failed}`, 'error');
+    }
+  } else {
+    try {
+      const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const token = doc.querySelector('#solution__token')?.value;
+      if (!token) throw new Error('Token manquant');
+
+      const body = new URLSearchParams({
+        'solution[_token]': token,
+        'solution[adresse]': client.street || 'TEST',
+        'solution[codePostal]': client.zip || 'TEST',
+        'solution[enseigne]': client.name || 'TEST',
+        'solution[latitude]': client.partner_latitude || '0',
+        'solution[longitude]': client.partner_longitude || '0',
+        'solution[mac]': '',
+        'solution[statusApi]': '0',
+        'solution[ticketfile]': '1',
+        'solution[versionEpack]': '',
+        'solution[ville]': client.city || 'TEST'
+      });
+
+      const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
+      const match = response.url.match(/solution\/(\d+)/);
+      if (match) {
+        chrome.storage.local.set({ solutionId: match[1] });
       }
+      updateOutput('Solution créée avec succès !', 'success');
+      chrome.tabs.create({ url: response.url, active: false });
+    } catch (err) {
+      updateOutput('Erreur : ' + err.message, 'error');
+    }
+  }
 
-      const client = data.partnerData;
-      const hasZones = Array.isArray(data.paramData) && data.paramData.length > 1;
+  hideLoader();
+  btn.disabled = false;
+  btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+}
 
-      if (hasZones) {
-        const solutionMap = {};
-
-        for (const param of data.paramData) {
-          const zoneName = param.zone;
-          try {
-            const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const token = doc.querySelector('#solution__token')?.value;
-            if (!token) throw new Error("Token manquant");
-
-            const body = new URLSearchParams({
-              'solution[_token]': token,
-              'solution[adresse]': client.street || 'TEST',
-              'solution[codePostal]': client.zip || 'TEST',
-              'solution[enseigne]': `${client.name || 'TEST'} - ${zoneName}`,
-              'solution[latitude]': client.partner_latitude || '0',
-              'solution[longitude]': client.partner_longitude || '0',
-              'solution[mac]': '',
-              'solution[statusApi]': '0',
-              'solution[ticketfile]': '1',
-              'solution[versionEpack]': '',
-              'solution[ville]': client.city || 'TEST'
-            });
-
-            const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
-            const match = response.url.match(/solution\/(\d+)/);
-            if (match) {
-              solutionMap[param.id] = match[1];
-              chrome.tabs.create({ url: response.url, active: false });
-            }
-          } catch (err) {
-            updateOutput(`Erreur création pour zone ${zoneName} : ${err.message}`, "error");
-          }
-        }
-
-        chrome.storage.local.set({ solutionMap });
-        if (Object.keys(solutionMap).length === data.paramData.length) {
-          updateOutput("Solutions créées avec succès !", "success");
-        } else {
-          const failed = data.paramData
-            .filter(p => !solutionMap[p.id])
-            .map(p => p.zone)
-            .join(', ');
-          updateOutput(`Solutions incomplètes : ${failed}`, "error");
-        }
-      } else {
-        try {
-          const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
-          const doc = new DOMParser().parseFromString(html, 'text/html');
-          const token = doc.querySelector('#solution__token')?.value;
-          if (!token) throw new Error("Token manquant");
-
-          const body = new URLSearchParams({
-            'solution[_token]': token,
-            'solution[adresse]': client.street || 'TEST',
-            'solution[codePostal]': client.zip || 'TEST',
-            'solution[enseigne]': client.name || 'TEST',
-            'solution[latitude]': client.partner_latitude || '0',
-            'solution[longitude]': client.partner_longitude || '0',
-            'solution[mac]': '',
-            'solution[statusApi]': '0',
-            'solution[ticketfile]': '1',
-            'solution[versionEpack]': '',
-            'solution[ville]': client.city || 'TEST'
-          });
-
-          const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
-          const match = response.url.match(/solution\/(\d+)/);
-          if (match) {
-            chrome.storage.local.set({ solutionId: match[1] });
-          }
-          updateOutput("Solution créée avec succès !", "success");
-          chrome.tabs.create({ url: response.url, active: false });
-        } catch (err) {
-          updateOutput("Erreur : " + err.message, "error");
-        }
-      }
-
-      hideLoader();
-      btn.disabled = false;
-      btn.innerHTML = `<i class="fas fa-desktop"></i>`;
-    });
-  });
+document.getElementById('createSolution').addEventListener('click', () => {
+  createSolutionAction();
 });
 
 // 👤 Créer un utilisateur
-document.getElementById("createUser").addEventListener("click", () => {
-  showLoader("Recherche des données utilisateur...");
-  chrome.storage.local.get("managerData", (data) => {
-    if (!data.managerData) {
-      updateOutput("Aucune donnée utilisateur trouvée.", "error");
+async function createUserAction() {
+  showLoader('Recherche des données utilisateur...');
+  const data = await new Promise(r => chrome.storage.local.get('managerData', r));
+  if (!data.managerData) {
+    updateOutput('Aucune donnée utilisateur trouvée.', 'error');
+    hideLoader();
+    return;
+  }
+  const { email, name, mobile, function: userFunction } = data.managerData;
+  const userId = await new Promise(r => checkIfUserExists(email, r));
+  if (userId) {
+    updateOutput(`Utilisateur existant : ${userId}`, 'info');
+    chrome.tabs.create({ url: `https://backoffice.epack-manager.com/epack/manager/user/${userId}`, active: false });
+    hideLoader();
+  } else {
+    const BOSSID = await new Promise(r => getBOSSID(r));
+    if (!BOSSID) {
+      updateOutput('Le cookie BOSSID est introuvable.', 'error');
       hideLoader();
       return;
     }
-    const { email, name, mobile, function: userFunction } = data.managerData;
-    checkIfUserExists(email, (userId) => {
-      if (userId) {
-        updateOutput(`Utilisateur existant : ${userId}`, "info");
-        chrome.tabs.create({ url: `https://backoffice.epack-manager.com/epack/manager/user/${userId}`, active: false });
-        hideLoader();
-      } else {
-        getBOSSID(BOSSID => {
-          if (!BOSSID) {
-            updateOutput("Le cookie BOSSID est introuvable.", "error");
-            hideLoader();
-            return;
-          }
-          createUser(BOSSID, { email, name, mobile, function: userFunction });
-        });
-      }
-    });
-  });
+    await createUser(BOSSID, { email, name, mobile, function: userFunction });
+  }
+}
+
+document.getElementById('createUser').addEventListener('click', () => {
+  createUserAction();
 });
 
 // 🧩 Ouvrir les paramètres
-document.getElementById("openParam").addEventListener("click", () => {
-  showLoader("Chargement des paramètres...");
-  chrome.storage.local.get(["paramData", "managerData"], async (data) => {
-    if (!data.paramData || !Array.isArray(data.paramData)) {
-      updateOutput("Aucune donnée paramData valide trouvée.", "error");
+
+// 🧠 Tout créer
+async function openParamAction() {
+  showLoader('Chargement des paramètres...');
+  const data = await new Promise(r => chrome.storage.local.get(['paramData', 'managerData'], r));
+  if (!data.paramData || !Array.isArray(data.paramData)) {
+    updateOutput('Aucune donnée paramData valide trouvée.', 'error');
+    hideLoader();
+    return;
+  }
+
+  const managerKey = data.managerData ? integratorKey(data.managerData.name) : '';
+
+  const client = data.paramData[0].client;
+  const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
+
+  let successCount = 0;
+  let failCount = 0;
+  const failedZones = [];
+  const multipleZones = data.paramData.length > 1;
+
+  try {
+    const response = await fetch(searchUrl, { method: 'GET', credentials: 'include' });
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const rows = [...doc.querySelectorAll('table.table-bordered tbody tr')];
+
+    if (rows.length === 0) {
+      updateOutput(`❌ Aucun résultat trouvé pour ${client}`, 'error');
       hideLoader();
       return;
     }
 
-    const managerKey = data.managerData ? integratorKey(data.managerData.name) : "";
+    const usedIndexes = new Set();
+    const paramMap = {};
+    const paramIds = [];
 
-    const client = data.paramData[0].client;
-    const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
+    for (const param of data.paramData) {
+      const { zone, integrator, id: paramId, originalZone } = param;
+      const searchZone = originalZone || zone;
+      let found = false;
 
-    let successCount = 0;
-    let failCount = 0;
-    const failedZones = [];
-    const multipleZones = data.paramData.length > 1;
+      for (let i = 0; i < rows.length; i++) {
+        if (usedIndexes.has(i)) continue;
 
-    try {
-      const response = await fetch(searchUrl, { method: "GET", credentials: "include" });
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const rows = [...doc.querySelectorAll("table.table-bordered tbody tr")];
+        const row = rows[i];
+        const tds = row.querySelectorAll('td');
+        const zoneCellText = tds[4]?.textContent?.trim() || '';
+        const nameCellText = tds[2]?.textContent?.trim() || '';
 
-      if (rows.length === 0) {
-        updateOutput(`❌ Aucun résultat trouvé pour ${client}`, "error");
-        hideLoader();
-        return;
-      }
+        const rowKey = integratorKey(nameCellText);
+        const expectedKey = integratorKey(integrator);
 
-      const usedIndexes = new Set();
-      const paramMap = {};
-      const paramIds = [];
-
-      for (const param of data.paramData) {
-        const { zone, integrator, id: paramId, originalZone } = param;
-        const searchZone = originalZone || zone;
-        let found = false;
-
-        for (let i = 0; i < rows.length; i++) {
-          if (usedIndexes.has(i)) continue;
-
-          const row = rows[i];
-          const tds = row.querySelectorAll("td");
-          const zoneCellText = tds[4]?.textContent?.trim() || "";
-          const nameCellText = tds[2]?.textContent?.trim() || "";
-
-          const rowKey = integratorKey(nameCellText);
-          const expectedKey = integratorKey(integrator);
-
-          if (
-            normalizeText(zoneCellText) === normalizeText(searchZone) &&
-            (!expectedKey || keysMatch(rowKey, expectedKey))
-          ) {
-            const link = row.querySelector("a[href]")?.getAttribute("href");
-            if (link) {
-              const fullUrl = `https://backoffice.epack-manager.com${link}`;
-              chrome.tabs.create({ url: fullUrl, active: false });
-              const id = link.split('/').pop();
-              if (multipleZones) {
-                paramMap[paramId] = id;
-              } else {
-                paramIds.push(id);
-              }
-              usedIndexes.add(i);
-              successCount++;
-              found = true;
-              break;
+        if (
+          normalizeText(zoneCellText) === normalizeText(searchZone) &&
+          (!expectedKey || keysMatch(rowKey, expectedKey))
+        ) {
+          const link = row.querySelector('a[href]')?.getAttribute('href');
+          if (link) {
+            const fullUrl = `https://backoffice.epack-manager.com${link}`;
+            chrome.tabs.create({ url: fullUrl, active: false });
+            const id = link.split('/').pop();
+            if (multipleZones) {
+              paramMap[paramId] = id;
+            } else {
+              paramIds.push(id);
             }
+            usedIndexes.add(i);
+            successCount++;
+            found = true;
+            break;
           }
         }
-
-        if (!found) {
-          failCount++;
-          failedZones.push(zone);
-        }
       }
 
-      if (multipleZones) {
-        chrome.storage.local.set({ paramMap });
-      } else {
-        chrome.storage.local.set({ paramIds });
+      if (!found) {
+        failCount++;
+        failedZones.push(zone);
       }
-
-      // Résumé
-      let summary = `✅ ${successCount} zone(s) ouverte(s).\n`;
-      if (failCount > 0) {
-        summary += `❌ ${failCount} zone(s) introuvable(s) : ${failedZones.join(", ")}`;
-        updateOutput(summary, "error");
-      } else {
-        updateOutput(summary, "success");
-      }
-
-    } catch (err) {
-      console.error(`❌ Erreur réseau pour ${client} :`, err);
-      updateOutput(`Erreur lors de la recherche pour ${client}`, "error");
-    } finally {
-      hideLoader();
     }
+
+    if (multipleZones) {
+      chrome.storage.local.set({ paramMap });
+    } else {
+      chrome.storage.local.set({ paramIds });
+    }
+
+    let summary = `✅ ${successCount} zone(s) ouverte(s).\n`;
+    if (failCount > 0) {
+      summary += `❌ ${failCount} zone(s) introuvable(s) : ${failedZones.join(', ')}`;
+      updateOutput(summary, 'error');
+    } else {
+      updateOutput(summary, 'success');
+    }
+  } catch (err) {
+    console.error(`❌ Erreur réseau pour ${client} :`, err);
+    updateOutput(`Erreur lors de la recherche pour ${client}`, 'error');
+  } finally {
+    hideLoader();
+  }
+}
+
+document.getElementById('openParam').addEventListener('click', () => {
+  openParamAction();
+});
+async function doAllAction() {
+  await createSolutionAction();
+  await wait(2000);
+  await createUserAction();
+  await wait(2000);
+  await openParamAction();
+}
+
+document.getElementById('doAll').addEventListener('click', () => {
+  doAllAction();
+});
+
+document.getElementById('doEverything').addEventListener('click', () => {
+  const keysToRemove = ['solutionMap', 'solutionId', 'paramMap', 'paramIds', 'userId'];
+  chrome.storage.local.remove(keysToRemove, async () => {
+    await doAllAction();
+    await wait(2000);
+    document.getElementById('connectAll').click();
   });
 });
 
-// 🧠 Tout créer
-document.getElementById("doAll").addEventListener("click", () => {
-  document.getElementById("createSolution").click();
-  setTimeout(() => {
-    document.getElementById("createUser").click();
-  }, 3000);
-  setTimeout(() => {
-    document.getElementById("openParam").click();
-  }, 6000);
-});
 
-// 🤖 Tout faire
-document.getElementById("doEverything").addEventListener("click", () => {
-  // Nettoyer d'abord le storage pour éviter de mélanger les données
-  const keysToRemove = ["solutionMap", "solutionId", "paramMap", "paramIds", "userId"];
-  chrome.storage.local.remove(keysToRemove, () => {
-    document.getElementById("doAll").click();
-    setTimeout(() => {
-      document.getElementById("connectAll").click();
-    }, 9000);
-  });
-});
 
-// 🔗 Tout connecter
+// Afficher données à l'ouverture
 document.getElementById("connectAll").addEventListener("click", () => {
   showLoader("Association en cours...");
   chrome.storage.local.get(["solutionMap", "solutionId", "paramMap", "paramIds", "userId", "paramData"], data => {
@@ -600,7 +604,6 @@ document.getElementById("connectAll").addEventListener("click", () => {
 });
 
 
-// Afficher données à l'ouverture
 document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(["partnerData", "managerData", "paramData"], (data) => {
     const container = document.getElementById("client-info");
