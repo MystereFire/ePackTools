@@ -197,12 +197,12 @@ document.getElementById("toggleLogin").addEventListener("click", () => {
 
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.local.get(["sondeEmail", "sondePassword", "proxyURL"], (data) => {
-    if (data.sondeEmail) {
-      document.getElementById("sonde-email").value = data.sondeEmail;
+  chrome.storage.local.get(["probeEmail", "probePassword", "proxyURL"], (data) => {
+    if (data.probeEmail) {
+      document.getElementById("sonde-email").value = data.probeEmail;
     }
-    if (data.sondePassword) {
-      document.getElementById("sonde-password").value = data.sondePassword;
+    if (data.probePassword) {
+      document.getElementById("sonde-password").value = data.probePassword;
     }
     if (data.proxyURL) {
       proxyURL = data.proxyURL;
@@ -222,8 +222,8 @@ document.getElementById("sonde-login-form").addEventListener("submit", (e) => {
   proxyURL = pUrl;
 
   chrome.storage.local.set({
-    sondeEmail: email,
-    sondePassword: password,
+    probeEmail: email,
+    probePassword: password,
     proxyURL: pUrl
   }, () => {
     updateSondeOutput("🧪 Identifiants enregistrés avec succès !", "success");
@@ -249,7 +249,7 @@ document.getElementById("testConnexion").addEventListener("click", () => {
       if (data.token && data.refreshToken) {
         chrome.storage.local.set({
           bluconsoleToken: data.token,
-          bluconsoleRToken: data.refreshToken,
+          bluconsoleRefreshToken: data.refreshToken,
           bluconsoleUser: data.user
         });
         updateSondeOutput(`✅ Connexion réussie via proxy ${proxyURL}!`, "success");
@@ -272,8 +272,8 @@ async function createSolutionAction() {
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
 
-  const d = await new Promise(r => chrome.storage.local.get('paramData', r));
-  const hasZones = Array.isArray(d.paramData) && d.paramData.length > 1;
+  const d = await new Promise(r => chrome.storage.local.get('parameterData', r));
+  const hasZones = Array.isArray(d.parameterData) && d.parameterData.length > 1;
   showLoader(hasZones ? 'Création des solutions...' : 'Création de la solution...');
 
   const BOSSID = await new Promise(r => getBOSSID(r));
@@ -285,8 +285,8 @@ async function createSolutionAction() {
     return;
   }
 
-  const data = await new Promise(r => chrome.storage.local.get(['partnerData', 'paramData'], r));
-  if (!data.partnerData) {
+  const data = await new Promise(r => chrome.storage.local.get(['clientData', 'parameterData'], r));
+  if (!data.clientData) {
     updateOutput('Aucune donnée client trouvée.', 'error');
     btn.disabled = false;
     btn.innerHTML = `<i class="fas fa-desktop"></i>`;
@@ -294,12 +294,12 @@ async function createSolutionAction() {
     return;
   }
 
-  const client = data.partnerData;
-  const multi = Array.isArray(data.paramData) && data.paramData.length > 1;
+  const client = data.clientData;
+  const multi = Array.isArray(data.parameterData) && data.parameterData.length > 1;
 
   if (multi) {
-    const solutionMap = {};
-    for (const param of data.paramData) {
+    const solutionsMap = {};
+    for (const param of data.parameterData) {
       const zoneName = param.zone;
       try {
         const html = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'GET', BOSSID).then(r => r.text());
@@ -324,7 +324,7 @@ async function createSolutionAction() {
         const response = await fetchWithCookie('https://backoffice.epack-manager.com/epack/manager/solution/new', 'POST', BOSSID, { 'Content-Type': 'application/x-www-form-urlencoded' }, body);
         const match = response.url.match(/solution\/(\d+)/);
         if (match) {
-          solutionMap[param.id] = match[1];
+          solutionsMap[param.id] = match[1];
           chrome.tabs.create({ url: response.url, active: false });
         }
       } catch (err) {
@@ -332,11 +332,11 @@ async function createSolutionAction() {
       }
     }
 
-    chrome.storage.local.set({ solutionMap });
-    if (Object.keys(solutionMap).length === data.paramData.length) {
+    chrome.storage.local.set({ solutionsMap });
+    if (Object.keys(solutionsMap).length === data.parameterData.length) {
       updateOutput('Solutions créées avec succès !', 'success');
     } else {
-      const failed = data.paramData.filter(p => !solutionMap[p.id]).map(p => p.zone).join(', ');
+      const failed = data.parameterData.filter(p => !solutionsMap[p.id]).map(p => p.zone).join(', ');
       updateOutput(`Solutions incomplètes : ${failed}`, 'error');
     }
   } else {
@@ -384,15 +384,15 @@ document.getElementById('createSolution').addEventListener('click', () => {
 // 👤 Créer un utilisateur
 async function createUserAction() {
   showLoader('Recherche des données utilisateur...');
-  const data = await new Promise(r => chrome.storage.local.get(['managerData', 'partnerData'], r));
-  if (!data.managerData) {
+  const data = await new Promise(r => chrome.storage.local.get(['managerInfo', 'clientData'], r));
+  if (!data.managerInfo) {
     updateOutput('Aucune donnée utilisateur trouvée.', 'error');
     hideLoader();
     return;
   }
-  const { email, name, mobile, function: userFunction } = data.managerData;
-  const clientCountry = Array.isArray(data.partnerData?.country_id)
-    ? data.partnerData.country_id[1]
+  const { email, name, mobile, function: userFunction } = data.managerInfo;
+  const clientCountry = Array.isArray(data.clientData?.country_id)
+    ? data.clientData.country_id[1]
     : '';
   const userId = await new Promise(r => checkIfUserExists(email, r));
   if (userId) {
@@ -419,22 +419,22 @@ document.getElementById('createUser').addEventListener('click', () => {
 // 🧠 Tout créer
 async function openParamAction() {
   showLoader('Chargement des paramètres...');
-  const data = await new Promise(r => chrome.storage.local.get(['paramData', 'managerData'], r));
-  if (!data.paramData || !Array.isArray(data.paramData)) {
-    updateOutput('Aucune donnée paramData valide trouvée.', 'error');
+  const data = await new Promise(r => chrome.storage.local.get(['parameterData', 'managerInfo'], r));
+  if (!data.parameterData || !Array.isArray(data.parameterData)) {
+    updateOutput('Aucune donnée parameterData valide trouvée.', 'error');
     hideLoader();
     return;
   }
 
-  const managerKey = data.managerData ? integratorKey(data.managerData.name) : '';
+  const managerKey = data.managerInfo ? integratorKey(data.managerInfo.name) : '';
 
-  const client = data.paramData[0].client;
+  const client = data.parameterData[0].client;
   const searchUrl = `https://backoffice.epack-manager.com/epack/configurateur/?search=${encodeURIComponent(client)}`;
 
   let successCount = 0;
   let failCount = 0;
   const failedZones = [];
-  const multipleZones = data.paramData.length > 1;
+  const multipleZones = data.parameterData.length > 1;
 
   try {
     const response = await fetch(searchUrl, { method: 'GET', credentials: 'include' });
@@ -449,10 +449,10 @@ async function openParamAction() {
     }
 
     const usedIndexes = new Set();
-    const paramMap = {};
-    const paramIds = [];
+    const parameterMap = {};
+    const parameterIds = [];
 
-    for (const param of data.paramData) {
+    for (const param of data.parameterData) {
       const { zone, integrator, id: paramId, originalZone } = param;
       const searchZone = originalZone || zone;
       let found = false;
@@ -478,9 +478,9 @@ async function openParamAction() {
             chrome.tabs.create({ url: fullUrl, active: false });
             const id = link.split('/').pop();
             if (multipleZones) {
-              paramMap[paramId] = id;
+              parameterMap[paramId] = id;
             } else {
-              paramIds.push(id);
+              parameterIds.push(id);
             }
             usedIndexes.add(i);
             successCount++;
@@ -497,9 +497,9 @@ async function openParamAction() {
     }
 
     if (multipleZones) {
-      chrome.storage.local.set({ paramMap });
+      chrome.storage.local.set({ parameterMap });
     } else {
-      chrome.storage.local.set({ paramIds });
+      chrome.storage.local.set({ parameterIds });
     }
 
     let summary = `✅ ${successCount} zone(s) ouverte(s).\n`;
@@ -533,7 +533,7 @@ document.getElementById('doAll').addEventListener('click', () => {
 });
 
 document.getElementById('doEverything').addEventListener('click', () => {
-  const keysToRemove = ['solutionMap', 'solutionId', 'paramMap', 'paramIds', 'userId'];
+  const keysToRemove = ['solutionsMap', 'solutionId', 'parameterMap', 'parameterIds', 'userId'];
   chrome.storage.local.remove(keysToRemove, async () => {
     await doAllAction();
     await wait(2000);
@@ -546,16 +546,16 @@ document.getElementById('doEverything').addEventListener('click', () => {
 // Afficher données à l'ouverture
 document.getElementById("connectAll").addEventListener("click", () => {
   showLoader("Association en cours...");
-  chrome.storage.local.get(["solutionMap", "solutionId", "paramMap", "paramIds", "userId", "paramData"], data => {
-    const { solutionMap, solutionId, paramMap, paramIds, userId, paramData } = data;
-    const multipleZones = solutionMap && paramMap;
+  chrome.storage.local.get(["solutionsMap", "solutionId", "parameterMap", "parameterIds", "userId", "parameterData"], data => {
+    const { solutionsMap, solutionId, parameterMap, parameterIds, userId, parameterData } = data;
+    const multipleZones = solutionsMap && parameterMap;
     if (multipleZones) {
       if (!userId) {
         updateOutput("ID manquant pour la connexion.", "error");
         hideLoader();
         return;
       }
-    } else if (!solutionId || !Array.isArray(paramIds) || paramIds.length === 0 || !userId) {
+    } else if (!solutionId || !Array.isArray(parameterIds) || parameterIds.length === 0 || !userId) {
       updateOutput("ID manquant pour la connexion.", "error");
       hideLoader();
       return;
@@ -569,14 +569,14 @@ document.getElementById("connectAll").addEventListener("click", () => {
       }
 
       const idToZone = {};
-      if (Array.isArray(paramData)) {
-        for (const p of paramData) idToZone[p.id] = p.zone;
+      if (Array.isArray(parameterData)) {
+        for (const p of parameterData) idToZone[p.id] = p.zone;
       }
 
       const paramErrors = [];
       if (multipleZones) {
-        for (const [pidKey, pid] of Object.entries(paramMap)) {
-          const sid = solutionMap[pidKey];
+        for (const [pidKey, pid] of Object.entries(parameterMap)) {
+          const sid = solutionsMap[pidKey];
           if (!sid) {
             paramErrors.push(pidKey);
             continue;
@@ -596,7 +596,7 @@ document.getElementById("connectAll").addEventListener("click", () => {
           }
         }
       } else {
-        for (const pid of paramIds) {
+        for (const pid of parameterIds) {
           try {
             const body = new URLSearchParams({ solutionId });
             const res = await fetchWithCookie(
@@ -614,7 +614,7 @@ document.getElementById("connectAll").addEventListener("click", () => {
       }
 
       let userError = null;
-      const solutionIds = multipleZones ? Object.values(solutionMap) : [solutionId];
+      const solutionIds = multipleZones ? Object.values(solutionsMap) : [solutionId];
       for (const sid of solutionIds) {
         try {
           const body = new URLSearchParams({
@@ -650,13 +650,13 @@ document.getElementById("connectAll").addEventListener("click", () => {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.local.get(["partnerData", "managerData", "paramData"], (data) => {
+  chrome.storage.local.get(["clientData", "managerInfo", "parameterData"], (data) => {
     const container = document.getElementById("client-info");
     let html = "";
 
     // 🏢 Client
-    if (data.partnerData) {
-      const c = data.partnerData;
+    if (data.clientData) {
+      const c = data.clientData;
       html += `<div class="info-block"><h3>🏢 Client</h3><ul>
         <li><strong>Nom :</strong> ${c.name || "-"}</li>
         <li><strong>Adresse :</strong> ${c.street || "-"}, ${c.zip || "-"} ${c.city || "-"}</li>
@@ -665,9 +665,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 👤 Manager
-    if (data.managerData) {
-      const u = data.managerData;
-      const clientCountry = data.partnerData?.country_id ? data.partnerData.country_id[1] : '';
+    if (data.managerInfo) {
+      const u = data.managerInfo;
+      const clientCountry = data.clientData?.country_id ? data.clientData.country_id[1] : '';
       html += `<div class="info-block"><h3>👤 Manager</h3><ul>
         <li><strong>Nom :</strong> ${u.name || "-"}</li>
         <li><strong>Fonction :</strong> ${u.function || "-"}</li>
@@ -678,30 +678,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 🧩 Paramètres
-    if (Array.isArray(data.paramData)) {
-      if (data.paramData.length > 0 && typeof data.paramData[0] === "object") {
-        if (data.paramData.length > 1) {
+    if (Array.isArray(data.parameterData)) {
+      if (data.parameterData.length > 0 && typeof data.parameterData[0] === "object") {
+        if (data.parameterData.length > 1) {
           html += `<div class="info-block"><h3>🧩 Paramètres détectés</h3><ul>` +
-            data.paramData
+            data.parameterData
               .map((p, idx) =>
                 `<li>🔸 ${p.client} (${p.integrator || '-'}) – <input type="text" class="zone-input" data-index="${idx}" value="${p.zone}" /></li>`
               )
               .join("") +
             `</ul></div>`;
         } else {
-          const p = data.paramData[0];
+          const p = data.parameterData[0];
           html += `<div class="info-block"><h3>🧩 Paramètre détecté</h3><ul>
             <li>🔸 ${p.client} (${p.integrator || '-'}) – ${p.zone}</li>
           </ul></div>`;
         }
       } else {
         html += `<div class="info-block"><h3>🧩 Paramètres détectés</h3><ul>` +
-          data.paramData.map(p => `<li>🔸 ${p}</li>`).join("") +
+          data.parameterData.map(p => `<li>🔸 ${p}</li>`).join("") +
           `</ul></div>`;
       }
-    } else if (data.paramData) {
+    } else if (data.parameterData) {
       html += `<div class="info-block"><h3>🧩 Paramètre détecté</h3><ul>
-        <li>🔸 ${data.paramData}</li>
+        <li>🔸 ${data.parameterData}</li>
       </ul></div>`;
     }
 
@@ -711,10 +711,10 @@ document.addEventListener("DOMContentLoaded", () => {
       input.addEventListener('input', () => {
         const idx = parseInt(input.getAttribute('data-index'), 10);
         const val = input.value.trim();
-        chrome.storage.local.get('paramData', d => {
-          if (Array.isArray(d.paramData) && d.paramData[idx]) {
-            d.paramData[idx].zone = val;
-            chrome.storage.local.set({ paramData: d.paramData });
+        chrome.storage.local.get('parameterData', d => {
+          if (Array.isArray(d.parameterData) && d.parameterData[idx]) {
+            d.parameterData[idx].zone = val;
+            chrome.storage.local.set({ parameterData: d.parameterData });
           }
         });
       });
