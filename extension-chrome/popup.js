@@ -618,7 +618,7 @@ document.getElementById("connectAll").addEventListener("click", () => {
               { 'Content-Type': 'application/x-www-form-urlencoded' },
               body
             );
-            if (!res.ok) paramErrors.push(pidKey);
+            if (!res.ok && res.status !== 302) paramErrors.push(pidKey);
           } catch (err) {
             paramErrors.push(pidKey);
           }
@@ -634,7 +634,7 @@ document.getElementById("connectAll").addEventListener("click", () => {
               { 'Content-Type': 'application/x-www-form-urlencoded' },
               body
             );
-            if (!res.ok) paramErrors.push(pid);
+            if (!res.ok && res.status !== 302) paramErrors.push(pid);
           } catch (err) {
             paramErrors.push(pid);
           }
