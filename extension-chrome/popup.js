@@ -225,7 +225,7 @@ document.getElementById("toggleLogin").addEventListener("click", () => {
 
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.local.get(["probeEmail", "probePassword", "proxyURL"], (data) => {
+  chrome.storage.local.get(["probeEmail", "probePassword", "proxyURL", "sondeIds", "lastSondeResults"], (data) => {
     if (data.probeEmail) {
       document.getElementById("sonde-email").value = data.probeEmail;
     }
@@ -237,6 +237,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("proxy-url").value = data.proxyURL;
     } else {
       document.getElementById("proxy-url").value = DEFAULT_PROXY_URL;
+    }
+
+    if (Array.isArray(data.sondeIds)) {
+      document.getElementById("sonde-ids").value = data.lastSondeResults ? data.lastSondeResults.join("\n") : data.sondeIds.join("\n");
     }
   });
 });
@@ -291,7 +295,10 @@ document.getElementById("testConnexion").addEventListener("click", () => {
 });
 
 document.getElementById("verifierSondes").addEventListener("click", () => {
-  sondeUtils.verifierSondes();
+  const ids = document.getElementById("sonde-ids").value.split("\n");
+  chrome.storage.local.set({ sondeIds: ids }, () => {
+    sondeUtils.verifierSondes();
+  });
 });
 
 // Créer une solution

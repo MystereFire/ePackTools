@@ -1,6 +1,20 @@
 // Service worker principal de l'extension
 // Importe le logger et les modules utilitaires
-importScripts('logger.js', 'scripts/storage.js', 'scripts/api.js');
+importScripts('logger.js', 'scripts/storage.js', 'scripts/api.js', 'scripts/sondes.js');
+
+// Planifie un test de connexion toutes les 20 minutes
+function initLoginCron() {
+  chrome.alarms.create('autoLogin', { periodInMinutes: 20 });
+}
+
+chrome.runtime.onInstalled.addListener(initLoginCron);
+chrome.runtime.onStartup.addListener(initLoginCron);
+
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === 'autoLogin') {
+    sondeUtils.relogin().catch(() => {});
+  }
+});
 
 // Réinitialise les indicateurs lors de la navigation dans Odoo
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
