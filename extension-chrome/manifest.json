@@ -9,7 +9,8 @@
     "activeTab",
     "storage",
     "cookies",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "web_accessible_resources": [
     {
