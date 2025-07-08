@@ -11,7 +11,9 @@ function relogin() {
       const { probeEmail, probePassword, proxyURL: storedProxy } = creds;
       if (storedProxy) proxyURL = storedProxy;
       if (!probeEmail || !probePassword) {
-        updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
+        if (typeof updateSondeOutput === 'function') {
+          updateSondeOutput("❌ Identifiants manquants pour reconnexion.", "error");
+        }
         return reject(new Error("missing credentials"));
       }
       fetch(`${proxyURL}/login`, {
@@ -54,76 +56,91 @@ async function fetchWithAuthRetry(url, updateTokens) {
   return res.json();
 }
 
-// Vérifie l'état d'une liste de sondes ou hubs
-function verifierSondes() {
-  const textarea = document.getElementById("sonde-ids");
-  let rawLines = textarea.value.split("\n");
-
-  if (rawLines.length === 0) {
-    updateSondeOutput("Veuillez entrer au moins un ID.", "error");
-    return;
-  }
-
-  chrome.storage.local.get(["bluconsoleToken", "bluconsoleRefreshToken", "proxyURL"], data => {
-    let token = data.bluconsoleToken;
-    let rtoken = data.bluconsoleRefreshToken;
-    if (data.proxyURL) proxyURL = data.proxyURL;
-
-    if (!token || !rtoken) {
-      updateSondeOutput("❌ Token manquant. Connectez-vous d'abord.", "error");
+// Vérifie l'état d'une liste d'identifiants de sondes/hubs
+function verifierSondesListe(ids) {
+  return new Promise(resolve => {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      resolve([]);
       return;
     }
 
-    // Nettoie les lignes de départ
-    rawLines = rawLines.map(line =>
-      line.split(" ")[0].trim().replace(/\s+/g, "")
-    );
+    chrome.storage.local.get([
+      "bluconsoleToken",
+      "bluconsoleRefreshToken",
+      "proxyURL"
+    ], data => {
+      let token = data.bluconsoleToken;
+      let rtoken = data.bluconsoleRefreshToken;
+      if (data.proxyURL) proxyURL = data.proxyURL;
 
-    // On garde la structure pour mettre à jour ligne par ligne
-    const updatedLines = [...rawLines];
+      if (!token || !rtoken) {
+        updateSondeOutput && updateSondeOutput("❌ Token manquant. Connectez-vous d'abord.", "error");
+        resolve([]);
+        return;
+      }
 
-    Promise.all(
-      rawLines.map((cleanId, index) => {
-        if (!cleanId) {
-          updatedLines[index] = ""; // ignore vide
-          return Promise.resolve();
-        }
+      const cleaned = ids.map(line => line.split(" ")[0].trim().replace(/\s+/g, ""));
+      const updatedLines = [];
 
-        const isHub = cleanId.startsWith("0");
-        const url = isHub
-          ? `${proxyURL}/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
-          : `${proxyURL}/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
+      Promise.all(
+        cleaned.map(cleanId => {
+          if (!cleanId) {
+            updatedLines.push("");
+            return Promise.resolve();
+          }
 
-        return fetchWithAuthRetry(url, creds => { token = creds.token; rtoken = creds.rtoken; })
-          .then(data => {
-            if (isHub) {
-              const row = data?.Result?.Rows?.[0];
-              const emoji = row ? "✅" : "❌";
-              const info = row
-                ? ` (${row.ConnectionStatus}, ${row.Status}, ${row.LastRequestAt || "-"})`
-                : "";
-              updatedLines[index] = `${cleanId} ${emoji}${info}`;
-            } else {
-              const row = data?.Result?.Rows?.[0];
-              const emoji = row ? "✅" : "❌";
-              const temp = row?.Temperature?.Value || "?";
-              const battery = row?.Battery || "-";
-              const info = row
-                ? ` (Temp: ${temp}, Battery: ${battery})`
-                : "";
-              updatedLines[index] = `${cleanId} ${emoji}${info}`;
-            }
+          const isHub = cleanId.startsWith("0");
+          const url = isHub
+            ? `${proxyURL}/verifier-hub?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`
+            : `${proxyURL}/verifier-sonde?id=${encodeURIComponent(cleanId)}&token=${token}&rtoken=${rtoken}`;
+
+          return fetchWithAuthRetry(url, creds => {
+            token = creds.token;
+            rtoken = creds.rtoken;
           })
-          .catch(() => {
-            updatedLines[index] = `${cleanId} ❌`;
-          });
-      })
-    ).then(() => {
-      textarea.value = updatedLines.filter(Boolean).join("\n");
+            .then(data => {
+              if (isHub) {
+                const row = data?.Result?.Rows?.[0];
+                const emoji = row ? "✅" : "❌";
+                const info = row
+                  ? ` (${row.ConnectionStatus}, ${row.Status}, ${row.LastRequestAt || "-"})`
+                  : "";
+                updatedLines.push(`${cleanId} ${emoji}${info}`);
+              } else {
+                const row = data?.Result?.Rows?.[0];
+                const emoji = row ? "✅" : "❌";
+                const temp = row?.Temperature?.Value || "?";
+                const battery = row?.Battery || "-";
+                const info = row
+                  ? ` (Temp: ${temp}, Battery: ${battery})`
+                  : "";
+                updatedLines.push(`${cleanId} ${emoji}${info}`);
+              }
+            })
+            .catch(() => {
+              updatedLines.push(`${cleanId} ❌`);
+            });
+        })
+      ).then(() => {
+        resolve(updatedLines.filter(Boolean));
+      });
     });
   });
 }
 
-// Expose la fonction au reste du popup
-self.sondeUtils = { verifierSondes };
+// Vérifie les sondes depuis le textarea du popup
+function verifierSondes() {
+  const textarea = document.getElementById("sonde-ids");
+  const rawLines = textarea.value.split("\n");
+  if (rawLines.length === 0) {
+    updateSondeOutput("Veuillez entrer au moins un ID.", "error");
+    return;
+  }
+  verifierSondesListe(rawLines).then(result => {
+    textarea.value = result.join("\n");
+  });
+}
+
+// Expose les fonctions au reste du popup
+self.sondeUtils = { verifierSondes, verifierSondesListe, relogin };
 
