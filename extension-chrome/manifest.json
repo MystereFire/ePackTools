@@ -14,12 +14,8 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "sondes.html"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "resources": ["sondes.html"],
+      "matches": ["<all_urls>"]
     }
   ],
   "host_permissions": [

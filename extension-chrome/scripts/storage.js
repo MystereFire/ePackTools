@@ -14,11 +14,10 @@ function resetCaptureFlags() {
 
 // Supprime les données précédemment enregistrées dans chrome.storage
 function cleanData() {
-  chrome.storage.local.remove([
-    "clientData",
-    "managerInfo",
-    "parameterData",
-  ], () => {});
+  chrome.storage.local.remove(
+    ["clientData", "managerInfo", "parameterData"],
+    () => {},
+  );
 }
 
 // Enveloppe simple autour de chrome.storage.local.set
@@ -37,11 +36,23 @@ self.storageUtils = {
   storeData,
   generateId,
   flags: {
-    get firstReadRequestCaptured() { return firstReadRequestCaptured; },
-    set firstReadRequestCaptured(v) { firstReadRequestCaptured = v; },
-    get shouldCaptureRequest() { return shouldCaptureRequest; },
-    set shouldCaptureRequest(v) { shouldCaptureRequest = v; },
-    get shouldCaptureDataRequest() { return shouldCaptureDataRequest; },
-    set shouldCaptureDataRequest(v) { shouldCaptureDataRequest = v; }
-  }
+    get firstReadRequestCaptured() {
+      return firstReadRequestCaptured;
+    },
+    set firstReadRequestCaptured(v) {
+      firstReadRequestCaptured = v;
+    },
+    get shouldCaptureRequest() {
+      return shouldCaptureRequest;
+    },
+    set shouldCaptureRequest(v) {
+      shouldCaptureRequest = v;
+    },
+    get shouldCaptureDataRequest() {
+      return shouldCaptureDataRequest;
+    },
+    set shouldCaptureDataRequest(v) {
+      shouldCaptureDataRequest = v;
+    },
+  },
 };
