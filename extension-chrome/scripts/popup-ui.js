@@ -20,13 +20,9 @@ function updateOutput(message, type = "info") {
   outputDiv.style.display = "block";
   outputDiv.style.color = "#333";
   outputDiv.style.backgroundColor =
-    type === "success" ? "#d4edda" :
-    type === "error" ? "#f8d7da" :
-    "#f9f9f9";
+    type === "success" ? "#d4edda" : type === "error" ? "#f8d7da" : "#f9f9f9";
   outputDiv.style.borderColor =
-    type === "success" ? "#c3e6cb" :
-    type === "error" ? "#f5c6cb" :
-    "#ccc";
+    type === "success" ? "#c3e6cb" : type === "error" ? "#f5c6cb" : "#ccc";
   outputDiv.innerHTML = message;
 }
 
@@ -36,12 +32,8 @@ function updateSondeOutput(message, type = "info") {
   if (!outputDiv) return;
   outputDiv.style.display = "block";
   outputDiv.style.backgroundColor =
-    type === "success" ? "#d4edda" :
-    type === "error" ? "#f8d7da" :
-    "#f9f9f9";
+    type === "success" ? "#d4edda" : type === "error" ? "#f8d7da" : "#f9f9f9";
   outputDiv.style.borderColor =
-    type === "success" ? "#c3e6cb" :
-    type === "error" ? "#f5c6cb" :
-    "#ccc";
+    type === "success" ? "#c3e6cb" : type === "error" ? "#f5c6cb" : "#ccc";
   outputDiv.textContent = message;
 }

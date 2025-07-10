@@ -1,6 +1,6 @@
 :root {
-  --primary-color: #85F028;
-  --primary-hover: #4CAF50;
+  --primary-color: #85f028;
+  --primary-hover: #4caf50;
   --error-color: #f44336;
   --bg-dark: #223836;
   --bg-gradient: linear-gradient(135deg, #284a47, #1c2c2b);
@@ -8,7 +8,7 @@
 }
 
 body {
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: "Roboto", Arial, sans-serif;
   margin: 0;
   padding: 0;
   background: var(--bg-gradient);
@@ -46,7 +46,9 @@ h2 {
   background-color: var(--primary-color);
   color: var(--text-light);
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
