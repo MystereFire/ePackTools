@@ -116,20 +116,39 @@ function verifierSondesListe(ids) {
               .then((data) => {
                 if (isHub) {
                   const row = data?.Result?.Rows?.[0];
-                  const emoji = row ? "✅" : "❌";
-                  const info = row
-                    ? ` (${row.ConnectionStatus}, ${row.Status}, ${row.LastRequestAt || "-"})`
-                    : "";
-                  updatedLines.push(`${cleanId} ${emoji}${info}`);
+                  if (row) {
+                    const lastReq = row.LastRequestAt
+                      ? new Date(row.LastRequestAt)
+                      : null;
+                    const recent =
+                      lastReq && Date.now() - lastReq.getTime() < 3600 * 1000;
+                    const connected =
+                      row.ConnectionStatus?.toLowerCase() === "connected";
+                    const emoji = connected && recent ? "✅" : "❌";
+                    const info = ` (${row.ConnectionStatus}, ${row.Status}, ${
+                      row.LastRequestAt || "-"
+                    })`;
+                    updatedLines.push(`${cleanId} ${emoji}${info}`);
+                  } else {
+                    updatedLines.push(`${cleanId} ❌`);
+                  }
                 } else {
                   const row = data?.Result?.Rows?.[0];
-                  const emoji = row ? "✅" : "❌";
-                  const temp = row?.Temperature?.Value || "?";
-                  const battery = row?.Battery || "-";
-                  const info = row
-                    ? ` (Temp: ${temp}, Battery: ${battery})`
-                    : "";
-                  updatedLines.push(`${cleanId} ${emoji}${info}`);
+                  if (row) {
+                    const timeStr = row.Time;
+                    const lastTime = timeStr ? new Date(timeStr) : null;
+                    const recent =
+                      lastTime && Date.now() - lastTime.getTime() < 3600 * 1000;
+                    const emoji = recent ? "✅" : "❌";
+                    const temp = row?.Temperature?.Value || "?";
+                    const battery = row?.Battery || "-";
+                    const info = ` (Temp: ${temp}, Battery: ${battery}, Time: ${
+                      timeStr || "-"
+                    })`;
+                    updatedLines.push(`${cleanId} ${emoji}${info}`);
+                  } else {
+                    updatedLines.push(`${cleanId} ❌`);
+                  }
                 }
               })
               .catch(() => {
