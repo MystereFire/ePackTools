@@ -121,7 +121,7 @@ function verifierSondesListe(ids) {
                       ? new Date(row.LastRequestAt)
                       : null;
                     const recent =
-                      lastReq && Date.now() - lastReq.getTime() < 3600 * 1000;
+                      lastReq && Date.now() - lastReq.getTime() < 4 * 3600 * 1000;
                     const connected =
                       row.ConnectionStatus?.toLowerCase() === "connected";
                     const emoji = connected && recent ? "✅" : "❌";
@@ -138,7 +138,7 @@ function verifierSondesListe(ids) {
                     const timeStr = row.Time;
                     const lastTime = timeStr ? new Date(timeStr) : null;
                     const recent =
-                      lastTime && Date.now() - lastTime.getTime() < 3600 * 1000;
+                      lastTime && Date.now() - lastTime.getTime() < 4 * 3600 * 1000;
                     const emoji = recent ? "✅" : "❌";
                     const temp = row?.Temperature?.Value || "?";
                     const battery = row?.Battery || "-";
