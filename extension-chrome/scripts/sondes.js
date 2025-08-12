@@ -168,13 +168,17 @@ function verifierSondesListe(ids) {
 // Vérifie les sondes depuis le textarea du popup
 function verifierSondes() {
   const textarea = document.getElementById("sonde-ids");
-  const rawLines = textarea.value.split("\n");
+  const rawLines = textarea.value
+    .split("\n")
+    .filter((line) => line.trim() && !/^[-]{3,}$/.test(line.trim()));
   if (rawLines.length === 0) {
     updateSondeOutput("Veuillez entrer au moins un ID.", "error");
     return;
   }
   verifierSondesListe(rawLines).then((result) => {
-    textarea.value = result.join("\n");
+    textarea.value = result.join("\n---\n");
+    chrome.storage.local.set({ lastSondeResults: result });
+    textarea.dispatchEvent(new Event("input"));
   });
 }
 

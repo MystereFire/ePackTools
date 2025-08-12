@@ -180,6 +180,7 @@ h2 {
   font-size: 13px;
   margin: 10px 0;
   resize: vertical;
+  overflow-y: hidden;
 }
 
 #verifierSondes {

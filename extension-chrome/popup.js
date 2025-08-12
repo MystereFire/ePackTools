@@ -33,6 +33,11 @@ function keysMatch(a, b) {
   return a === b || a.startsWith(b) || b.startsWith(a);
 }
 
+function autoResizeTextarea(el) {
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
+
 function getBOSSID(callback) {
   chrome.cookies.get(
     { url: "https://backoffice.epack-manager.com", name: "BOSSID" },
@@ -235,6 +240,8 @@ document.getElementById("toggleLogin").addEventListener("click", () => {
 
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
+  const sondeTextarea = document.getElementById("sonde-ids");
+  sondeTextarea.addEventListener("input", () => autoResizeTextarea(sondeTextarea));
   chrome.storage.local.get(
     ["probeEmail", "probePassword", "proxyURL", "sondeIds", "lastSondeResults"],
     (data) => {
@@ -252,10 +259,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (Array.isArray(data.sondeIds)) {
-        document.getElementById("sonde-ids").value = data.lastSondeResults
-          ? data.lastSondeResults.join("\n")
+        sondeTextarea.value = data.lastSondeResults
+          ? data.lastSondeResults.join("\n---\n")
           : data.sondeIds.join("\n");
       }
+      autoResizeTextarea(sondeTextarea);
     },
   );
 });
@@ -323,7 +331,10 @@ document.getElementById("testConnexion").addEventListener("click", () => {
 });
 
 document.getElementById("verifierSondes").addEventListener("click", () => {
-  const ids = document.getElementById("sonde-ids").value.split("\n");
+  const ids = document
+    .getElementById("sonde-ids")
+    .value.split("\n")
+    .filter((line) => line.trim() && !/^[-]{3,}$/.test(line.trim()));
   chrome.storage.local.set({ sondeIds: ids }, () => {
     sondeUtils.verifierSondes();
   });
