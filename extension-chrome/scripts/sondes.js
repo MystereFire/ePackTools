@@ -95,12 +95,12 @@ function verifierSondesListe(ids) {
         const cleaned = ids.map((line) =>
           line.split(" ")[0].trim().replace(/\s+/g, ""),
         );
-        const updatedLines = [];
+        const updatedLines = Array(cleaned.length);
 
         Promise.all(
-          cleaned.map((cleanId) => {
+          cleaned.map((cleanId, idx) => {
             if (!cleanId) {
-              updatedLines.push("");
+              updatedLines[idx] = "";
               return Promise.resolve();
             }
 
@@ -128,9 +128,9 @@ function verifierSondesListe(ids) {
                     const info = ` (${row.ConnectionStatus}, ${row.Status}, ${
                       row.LastRequestAt || "-"
                     })`;
-                    updatedLines.push(`${cleanId} ${emoji}${info}`);
+                    updatedLines[idx] = `${cleanId} ${emoji}${info}`;
                   } else {
-                    updatedLines.push(`${cleanId} ❌`);
+                    updatedLines[idx] = `${cleanId} ❌`;
                   }
                 } else {
                   const row = data?.Result?.Rows?.[0];
@@ -147,18 +147,18 @@ function verifierSondesListe(ids) {
                     const info = ` (Temp: ${temp}, Battery: ${battery}, Time: ${
                       timeStr || "-"
                     })`;
-                    updatedLines.push(`${cleanId} ${emoji}${info}`);
+                    updatedLines[idx] = `${cleanId} ${emoji}${info}`;
                   } else {
-                    updatedLines.push(`${cleanId} ❌`);
+                    updatedLines[idx] = `${cleanId} ❌`;
                   }
                 }
               })
               .catch(() => {
-                updatedLines.push(`${cleanId} ❌`);
+                updatedLines[idx] = `${cleanId} ❌`;
               });
           }),
         ).then(() => {
-          resolve(updatedLines.filter(Boolean));
+          resolve(updatedLines);
         });
       },
     );
