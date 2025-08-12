@@ -142,7 +142,7 @@ function verifierSondesListe(ids) {
                     const temp = row?.Temperature?.Value || "?";
                     const battery = row?.Battery || "-";
                     const batteryVal = parseFloat(battery);
-                    const batteryLow = !isNaN(batteryVal) && batteryVal < 74;
+                    const batteryLow = !isNaN(batteryVal) && batteryVal < 75;
                     const emoji = recent && !batteryLow ? "✅" : "❌";
                     const info = ` (Temp: ${temp}, Battery: ${battery}, Time: ${
                       timeStr || "-"
