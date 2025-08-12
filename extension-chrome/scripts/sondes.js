@@ -139,9 +139,11 @@ function verifierSondesListe(ids) {
                     const lastTime = timeStr ? new Date(timeStr) : null;
                     const recent =
                       lastTime && Date.now() - lastTime.getTime() < 4 * 3600 * 1000;
-                    const emoji = recent ? "✅" : "❌";
                     const temp = row?.Temperature?.Value || "?";
                     const battery = row?.Battery || "-";
+                    const batteryVal = parseFloat(battery);
+                    const batteryLow = !isNaN(batteryVal) && batteryVal < 74;
+                    const emoji = recent && !batteryLow ? "✅" : "❌";
                     const info = ` (Temp: ${temp}, Battery: ${battery}, Time: ${
                       timeStr || "-"
                     })`;
