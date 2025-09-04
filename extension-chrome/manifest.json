@@ -1,31 +1,26 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "ePack Manager Creator",
   "version": "1.0",
   "description": "Une extension pour gérer les solutions/utilisateurs sur backoffice.epack-manager.com.",
   "permissions": [
-    "scripting",
     "activeTab",
     "storage",
     "cookies",
     "tabs",
     "alarms",
-    "notifications"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["sondes.html"],
-      "matches": ["<all_urls>"]
-    }
-  ],
-  "host_permissions": [
+    "notifications",
+    "webRequest",
+    "webRequestBlocking",
     "http://localhost:3000/*",
     "https://api.bluconsole.com/*",
     "https://backoffice.epack-manager.com/*",
     "https://chr-num.odoo.com/*"
   ],
+  "web_accessible_resources": ["sondes.html"],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "persistent": true
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -46,7 +41,7 @@
       "run_at": "document_start"
     }
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "popup.html"
   }
 }
