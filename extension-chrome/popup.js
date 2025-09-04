@@ -60,9 +60,6 @@ function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Toutes les actions longues sont désormais gérées par le service worker,
-// aucune connexion différée n'est nécessaire.
-
 function checkIfUserExists(email, callback) {
   const url = `https://backoffice.epack-manager.com/epack/manager/user/?search=${encodeURIComponent(email)}`;
   fetch(url, { method: "GET", credentials: "include" })
@@ -70,9 +67,11 @@ function checkIfUserExists(email, callback) {
     .then((html) => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
-      const row = doc.querySelector("table.table-bordered tbody tr");
-      const userId = row ? row.querySelector("td")?.textContent.trim() : null;
-      if (userId) {
+      const userIdCell = doc.querySelector(
+        "table.table-bordered tr.color td:first-child",
+      );
+      if (userIdCell) {
+        const userId = userIdCell.textContent.trim();
         chrome.storage.local.set({ userId });
         callback(userId);
       } else {
@@ -267,16 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
       autoResizeTextarea(sondeTextarea);
     },
   );
-});
-
-// Réception des messages du service worker pour afficher les statuts
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.type === "status") {
-    updateOutput(message.message, message.level);
-    if (message.finished) {
-      hideLoader();
-    }
-  }
 });
 
 // 💾 Sauvegarder email et mot de passe
@@ -496,8 +485,7 @@ async function createSolutionAction() {
 }
 
 document.getElementById("createSolution").addEventListener("click", () => {
-  showLoader("Création de la solution...");
-  chrome.runtime.sendMessage({ action: "createSolutionAction" });
+  createSolutionAction();
 });
 
 // 👤 Créer un utilisateur
@@ -541,8 +529,7 @@ async function createUserAction() {
 }
 
 document.getElementById("createUser").addEventListener("click", () => {
-  showLoader("Création de l'utilisateur...");
-  chrome.runtime.sendMessage({ action: "createUserAction" });
+  createUserAction();
 });
 
 // 🧩 Ouvrir les paramètres
@@ -656,8 +643,7 @@ async function openParamAction() {
 }
 
 document.getElementById("openParam").addEventListener("click", () => {
-  showLoader("Chargement des paramètres...");
-  chrome.runtime.sendMessage({ action: "openParamAction" });
+  openParamAction();
 });
 async function doAllAction() {
   await createSolutionAction();
@@ -668,8 +654,7 @@ async function doAllAction() {
 }
 
 document.getElementById("doAll").addEventListener("click", () => {
-  showLoader("Exécution en arrière-plan...");
-  chrome.runtime.sendMessage({ action: "doAllAction" });
+  doAllAction();
 });
 
 document.getElementById("doEverything").addEventListener("click", () => {
@@ -680,16 +665,149 @@ document.getElementById("doEverything").addEventListener("click", () => {
     "parameterIds",
     "userId",
   ];
-  chrome.storage.local.remove(keysToRemove, () => {
-    showLoader("Exécution en arrière-plan...");
-    chrome.runtime.sendMessage({ action: "doEverythingAction" });
+  chrome.storage.local.remove(keysToRemove, async () => {
+    await doAllAction();
+    await wait(2000);
+    document.getElementById("connectAll").click();
   });
 });
 
 // Afficher données à l'ouverture
 document.getElementById("connectAll").addEventListener("click", () => {
   showLoader("Association en cours...");
-  chrome.runtime.sendMessage({ action: "connectAllAction" });
+  chrome.storage.local.get(
+    [
+      "solutionsMap",
+      "solutionId",
+      "parameterMap",
+      "parameterIds",
+      "userId",
+      "parameterData",
+    ],
+    (data) => {
+      const {
+        solutionsMap,
+        solutionId,
+        parameterMap,
+        parameterIds,
+        userId,
+        parameterData,
+      } = data;
+      const multipleZones = solutionsMap && parameterMap;
+      if (multipleZones) {
+        if (!userId) {
+          updateOutput("ID manquant pour la connexion.", "error");
+          hideLoader();
+          return;
+        }
+      } else if (
+        !solutionId ||
+        !Array.isArray(parameterIds) ||
+        parameterIds.length === 0 ||
+        !userId
+      ) {
+        updateOutput("ID manquant pour la connexion.", "error");
+        hideLoader();
+        return;
+      }
+
+      getBOSSID(async (BOSSID) => {
+        if (!BOSSID) {
+          updateOutput("Le cookie BOSSID est introuvable.", "error");
+          hideLoader();
+          return;
+        }
+
+        const idToZone = {};
+        if (Array.isArray(parameterData)) {
+          for (const p of parameterData) idToZone[p.id] = p.zone;
+        }
+
+        const paramErrors = [];
+        if (multipleZones) {
+          for (const [pidKey, pid] of Object.entries(parameterMap)) {
+            const sid = solutionsMap[pidKey];
+            if (!sid) {
+              paramErrors.push(pidKey);
+              continue;
+            }
+            try {
+              const body = new URLSearchParams({ solutionId: sid });
+              const res = await fetchWithCookie(
+                `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+                "POST",
+                BOSSID,
+                { "Content-Type": "application/x-www-form-urlencoded" },
+                body,
+              );
+              if (!res.ok && res.status !== 302) paramErrors.push(pidKey);
+            } catch (err) {
+              paramErrors.push(pidKey);
+            }
+          }
+        } else {
+          for (const pid of parameterIds) {
+            try {
+              const body = new URLSearchParams({ solutionId });
+              const res = await fetchWithCookie(
+                `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+                "POST",
+                BOSSID,
+                { "Content-Type": "application/x-www-form-urlencoded" },
+                body,
+              );
+              if (!res.ok && res.status !== 302) paramErrors.push(pid);
+            } catch (err) {
+              paramErrors.push(pid);
+            }
+          }
+        }
+
+        let userError = null;
+        const solutionIds = multipleZones
+          ? Object.values(solutionsMap)
+          : [solutionId];
+        for (const sid of solutionIds) {
+          try {
+            const body = new URLSearchParams({
+              referer: "epack_manager_user_show",
+              solutionId: sid,
+            });
+            const userRes = await fetchWithCookie(
+              `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}`,
+              "POST",
+              BOSSID,
+              { "Content-Type": "application/x-www-form-urlencoded" },
+              body,
+            );
+            if (!userRes.ok)
+              userError = `user association -> ${userRes.status}`;
+          } catch (err) {
+            userError = err.message;
+          }
+        }
+
+        if (!userError && paramErrors.length === 0) {
+          updateOutput("Associations réalisées avec succès !", "success");
+        } else if (!userError) {
+          const displayErr = paramErrors
+            .map((id) => idToZone[id] || id)
+            .join(", ");
+          updateOutput(
+            `Utilisateur associé mais paramètres en échec : ${displayErr}`,
+            "error",
+          );
+        } else {
+          updateOutput(
+            `Erreur association utilisateur : ${userError}`,
+            "error",
+          );
+        }
+
+        hideLoader();
+      });
+    },
+  );
 });
 
 document.addEventListener("DOMContentLoaded", () => {

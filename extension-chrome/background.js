@@ -5,7 +5,6 @@ importScripts(
   "scripts/storage.js",
   "scripts/api.js",
   "scripts/sondes.js",
-  "scripts/tasks.js",
 );
 
 // Planifie un test de connexion toutes les 20 minutes
@@ -73,18 +72,3 @@ chrome.webRequest.onBeforeRequest.addListener(
   { urls: ["https://chr-num.odoo.com/*"] },
   ["requestBody", "extraHeaders"],
 );
-
-// Écoute les messages provenant de la popup pour lancer des actions
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || !message.action) return;
-
-  const actions = self.backgroundActions || {};
-  const fn = actions[message.action];
-  if (typeof fn === "function") {
-    fn()
-      .then(() => sendResponse({ status: "ok" }))
-      .catch((err) => sendResponse({ status: "error", message: err.message }));
-    // Indique que la réponse est asynchrone
-    return true;
-  }
-});
