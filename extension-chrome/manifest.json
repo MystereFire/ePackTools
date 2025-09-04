@@ -5,12 +5,14 @@
   "description": "Une extension pour gérer les solutions/utilisateurs sur backoffice.epack-manager.com.",
   "permissions": [
     "webRequest",
+    "webRequestBlocking",
     "scripting",
     "activeTab",
     "storage",
     "cookies",
     "tabs",
-    "alarms"
+    "alarms",
+    "notifications"
   ],
   "web_accessible_resources": [
     {

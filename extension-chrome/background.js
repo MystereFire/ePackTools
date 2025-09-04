@@ -5,6 +5,10 @@ importScripts(
   "scripts/storage.js",
   "scripts/api.js",
   "scripts/sondes.js",
+  "scripts/utils.js",
+  "scripts/api-utils.js",
+  "scripts/jobQueue.js",
+  "scripts/workflows.js",
 );
 
 // Planifie un test de connexion toutes les 20 minutes
@@ -12,13 +16,44 @@ function initLoginCron() {
   chrome.alarms.create("autoLogin", { periodInMinutes: 20 });
 }
 
-chrome.runtime.onInstalled.addListener(initLoginCron);
-chrome.runtime.onStartup.addListener(initLoginCron);
+chrome.runtime.onInstalled.addListener(() => {
+  initLoginCron();
+  jobQueue.processQueue();
+});
+chrome.runtime.onStartup.addListener(() => {
+  initLoginCron();
+  jobQueue.processQueue();
+});
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoLogin") {
     sondeUtils.relogin().catch(() => {});
   }
+  if (alarm.name === "jobQueue") {
+    jobQueue.processQueue();
+  }
+});
+
+// Alarme pour réveiller régulièrement le service worker
+chrome.alarms.create("jobQueue", { periodInMinutes: 1 });
+
+// Gestion des messages depuis le popup
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "enqueue") {
+    jobQueue
+      .addJob({ type: msg.jobType, payload: msg.payload })
+      .then((id) => sendResponse({ id }));
+    return true;
+  }
+  if (msg.type === "getState") {
+    jobQueue.getJobs().then((jobs) => sendResponse({ jobs }));
+    return true;
+  }
+  if (msg.type === "cancelJob") {
+    jobQueue.cancelJob(msg.id).then(() => sendResponse({ success: true }));
+    return true;
+  }
+  return false;
 });
 
 // Réinitialise les indicateurs lors de la navigation dans Odoo
