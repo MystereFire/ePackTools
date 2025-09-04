@@ -253,7 +253,7 @@ async function checkIfUserExists(email) {
   try {
     const response = await fetch(url, { method: 'GET', credentials: 'include' });
     const html = await response.text();
-    const match = html.match(/<table[^>]*class="table-bordered"[^>]*>[\s\S]*?<tr[^>]*class="color"[^>]*>\s*<td>(\d+)<\/td>/i);
+    const match = html.match(/<table[^>]*class="table-bordered"[^>]*>[\s\S]*?<tbody[^>]*>[\s\S]*?<tr[^>]*>[\s\S]*?<td>(\d+)<\/td>/i);
     return match ? match[1] : null;
   } catch {
     return null;
