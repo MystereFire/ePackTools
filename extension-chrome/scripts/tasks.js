@@ -46,10 +46,14 @@ function getBOSSID() {
 }
 
 function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
+  // When running in the service worker we cannot set the `Cookie` header
+  // manually. Instead rely on Chrome to include existing cookies by using
+  // the `credentials: "include"` option. The BOSSID value is still fetched
+  // beforehand to ensure the session exists.
   return fetch(url, {
     method,
+    credentials: "include",
     headers: {
-      Cookie: `BOSSID=${BOSSID}`,
       ...headers,
     },
     body,
