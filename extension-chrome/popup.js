@@ -60,6 +60,8 @@ function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+let pendingConnect = false;
+
 function checkIfUserExists(email, callback) {
   const url = `https://backoffice.epack-manager.com/epack/manager/user/?search=${encodeURIComponent(email)}`;
   fetch(url, { method: "GET", credentials: "include" })
@@ -266,6 +268,21 @@ document.addEventListener("DOMContentLoaded", () => {
       autoResizeTextarea(sondeTextarea);
     },
   );
+});
+
+// Réception des messages du service worker pour afficher les statuts
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === "status") {
+    updateOutput(message.message, message.level);
+    if (message.finished) {
+      hideLoader();
+      if (pendingConnect) {
+        pendingConnect = false;
+        const btn = document.getElementById("connectAll");
+        if (btn) btn.click();
+      }
+    }
+  }
 });
 
 // 💾 Sauvegarder email et mot de passe
@@ -485,7 +502,8 @@ async function createSolutionAction() {
 }
 
 document.getElementById("createSolution").addEventListener("click", () => {
-  createSolutionAction();
+  showLoader("Création de la solution...");
+  chrome.runtime.sendMessage({ action: "createSolutionAction" });
 });
 
 // 👤 Créer un utilisateur
@@ -529,7 +547,8 @@ async function createUserAction() {
 }
 
 document.getElementById("createUser").addEventListener("click", () => {
-  createUserAction();
+  showLoader("Création de l'utilisateur...");
+  chrome.runtime.sendMessage({ action: "createUserAction" });
 });
 
 // 🧩 Ouvrir les paramètres
@@ -643,7 +662,8 @@ async function openParamAction() {
 }
 
 document.getElementById("openParam").addEventListener("click", () => {
-  openParamAction();
+  showLoader("Chargement des paramètres...");
+  chrome.runtime.sendMessage({ action: "openParamAction" });
 });
 async function doAllAction() {
   await createSolutionAction();
@@ -654,7 +674,8 @@ async function doAllAction() {
 }
 
 document.getElementById("doAll").addEventListener("click", () => {
-  doAllAction();
+  showLoader("Exécution en arrière-plan...");
+  chrome.runtime.sendMessage({ action: "doAllAction" });
 });
 
 document.getElementById("doEverything").addEventListener("click", () => {
@@ -665,10 +686,10 @@ document.getElementById("doEverything").addEventListener("click", () => {
     "parameterIds",
     "userId",
   ];
-  chrome.storage.local.remove(keysToRemove, async () => {
-    await doAllAction();
-    await wait(2000);
-    document.getElementById("connectAll").click();
+  chrome.storage.local.remove(keysToRemove, () => {
+    pendingConnect = true;
+    showLoader("Exécution en arrière-plan...");
+    chrome.runtime.sendMessage({ action: "doAllAction" });
   });
 });
 
