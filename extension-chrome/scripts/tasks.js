@@ -116,6 +116,17 @@ function getLangFromCountry(country) {
   return map[country] || 'fr_FR';
 }
 
+// Extraire la valeur d'un champ hidden depuis du HTML brut.
+// L'extraction par regex doit gérer les variations d'espaces et de quotes.
+function extractToken(html, id) {
+  const pattern = new RegExp(
+    `id=["']${id}["'][^>]*value=["']([^"']+)["']`,
+    'i'
+  );
+  const match = html.match(pattern);
+  return match ? match[1] : null;
+}
+
 // --- Actions ---------------------------------------------------------
 
 async function createSolutionAction() {
@@ -150,8 +161,7 @@ async function createSolutionAction() {
           'GET',
           BOSSID
         ).then((r) => r.text());
-        const tokenMatch = html.match(/id="solution__token" value="([^"]+)"/);
-        const token = tokenMatch ? tokenMatch[1] : null;
+        const token = extractToken(html, 'solution__token');
         if (!token) throw new Error('Token manquant');
 
         const body = new URLSearchParams({
@@ -202,8 +212,7 @@ async function createSolutionAction() {
         'GET',
         BOSSID
       ).then((r) => r.text());
-      const tokenMatch = html.match(/id="solution__token" value="([^"]+)"/);
-      const token = tokenMatch ? tokenMatch[1] : null;
+      const token = extractToken(html, 'solution__token');
       if (!token) throw new Error('Token manquant');
 
       const body = new URLSearchParams({
@@ -283,8 +292,7 @@ async function createUserAction() {
       BOSSID
     ).then((r) => r.text());
 
-    const tokenMatch = html.match(/id="user__token" value="([^"]+)"/);
-    const tokenValue = tokenMatch ? tokenMatch[1] : null;
+    const tokenValue = extractToken(html, 'user__token');
     if (!tokenValue) {
       sendStatus('Token introuvable pour création utilisateur.', 'error', true);
       return;
