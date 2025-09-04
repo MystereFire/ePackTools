@@ -146,8 +146,8 @@ async function createSolutionAction() {
           'GET',
           BOSSID
         ).then((r) => r.text());
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const token = doc.querySelector('#solution__token')?.value;
+        const tokenMatch = html.match(/id="solution__token" value="([^"]+)"/);
+        const token = tokenMatch ? tokenMatch[1] : null;
         if (!token) throw new Error('Token manquant');
 
         const body = new URLSearchParams({
@@ -198,8 +198,8 @@ async function createSolutionAction() {
         'GET',
         BOSSID
       ).then((r) => r.text());
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const token = doc.querySelector('#solution__token')?.value;
+      const tokenMatch = html.match(/id="solution__token" value="([^"]+)"/);
+      const token = tokenMatch ? tokenMatch[1] : null;
       if (!token) throw new Error('Token manquant');
 
       const body = new URLSearchParams({
@@ -240,9 +240,8 @@ async function checkIfUserExists(email) {
   try {
     const response = await fetch(url, { method: 'GET', credentials: 'include' });
     const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const userIdCell = doc.querySelector('table.table-bordered tr.color td:first-child');
-    return userIdCell ? userIdCell.textContent.trim() : null;
+    const match = html.match(/<table[^>]*class="table-bordered"[^>]*>[\s\S]*?<tr[^>]*class="color"[^>]*>\s*<td>(\d+)<\/td>/i);
+    return match ? match[1] : null;
   } catch {
     return null;
   }
@@ -280,8 +279,8 @@ async function createUserAction() {
       BOSSID
     ).then((r) => r.text());
 
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const tokenValue = doc.querySelector('#user__token')?.value;
+    const tokenMatch = html.match(/id="user__token" value="([^"]+)"/);
+    const tokenValue = tokenMatch ? tokenMatch[1] : null;
     if (!tokenValue) {
       sendStatus('Token introuvable pour création utilisateur.', 'error', true);
       return;
@@ -342,8 +341,22 @@ async function openParamAction() {
   try {
     const response = await fetch(searchUrl, { method: 'GET', credentials: 'include' });
     const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const rows = [...doc.querySelectorAll('table.table-bordered tbody tr')];
+    const tableMatch = html.match(/<table[^>]*class="table-bordered"[^>]*>([\s\S]*?)<\/table>/i);
+    const rows = [];
+    if (tableMatch) {
+      const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+      let rowMatch;
+      while ((rowMatch = rowRegex.exec(tableMatch[1])) !== null) {
+        const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+        const cells = [];
+        let cellMatch;
+        while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {
+          cells.push(cellMatch[1].replace(/<[^>]*>/g, '').trim());
+        }
+        const linkMatch = rowMatch[1].match(/<a[^>]*href=\"([^\"]+)\"/i);
+        rows.push({ cells, link: linkMatch ? linkMatch[1] : null });
+      }
+    }
 
     if (rows.length === 0) {
       sendStatus(`Aucun résultat trouvé pour ${client}`, 'error', true);
@@ -362,9 +375,8 @@ async function openParamAction() {
       for (let i = 0; i < rows.length; i++) {
         if (usedIndexes.has(i)) continue;
         const row = rows[i];
-        const tds = row.querySelectorAll('td');
-        const zoneCellText = tds[4]?.textContent?.trim() || '';
-        const nameCellText = tds[2]?.textContent?.trim() || '';
+        const zoneCellText = row.cells[4] || '';
+        const nameCellText = row.cells[2] || '';
 
         const rowKey = integratorKey(nameCellText);
         const expectedKey = integratorKey(integrator);
@@ -373,7 +385,7 @@ async function openParamAction() {
           normalizeText(zoneCellText) === normalizeText(searchZone) &&
           (!expectedKey || keysMatch(rowKey, expectedKey))
         ) {
-          const link = row.querySelector('a[href]')?.getAttribute('href');
+          const link = row.link;
           if (link) {
             const fullUrl = `https://backoffice.epack-manager.com${link}`;
             chrome.tabs.create({ url: fullUrl, active: false });
