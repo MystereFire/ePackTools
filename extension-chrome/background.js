@@ -54,6 +54,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === "requestIntercepted") {
+    logger.info(`Requête interceptée : ${msg.url}`);
+    return false;
+  }
+
   if (msg.type === "saleOrderRead") {
     if (storageUtils.flags.shouldCaptureRequest) {
       logger.info(`Requête sale.order/read interceptée : ${sender.tab?.url}`);
