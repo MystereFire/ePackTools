@@ -1,8 +1,8 @@
 # Extension Chrome ePack Tools
 
-Cette extension automatise plusieurs tâches réalisées dans le backoffice
-`backoffice.epack-manager.com` à partir des données collectées sur Odoo.
-Elle permet notamment :
+Cette extension basée sur le **manifest v3** automatise plusieurs tâches
+réalisées dans le backoffice `backoffice.epack-manager.com` à partir des
+données collectées sur Odoo. Elle permet notamment :
 
 - création automatique de **solutions** et d'**utilisateurs** ;
 - ouverture rapide des **paramètres** liés à une zone ;
