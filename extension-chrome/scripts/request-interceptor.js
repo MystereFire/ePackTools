@@ -1,6 +1,8 @@
 (function () {
   function handleRequest(url, body) {
     if (typeof url !== 'string' || typeof body !== 'string') return;
+    console.log(`Intercepted request: ${url}`);
+    chrome.runtime.sendMessage({ type: 'requestIntercepted', url });
     if (url.includes('sale.order/read')) {
       chrome.runtime.sendMessage({ type: 'saleOrderRead', body });
     } else if (url.includes('mail/thread/data')) {
