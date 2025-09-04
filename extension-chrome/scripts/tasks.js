@@ -447,10 +447,150 @@ async function doAllAction() {
   await openParamAction();
 }
 
+// Associe la solution, l'utilisateur et le paramétrage
+async function connectAllAction() {
+  sendStatus('Association en cours...', 'info');
+  const data = await new Promise((resolve) =>
+    chrome.storage.local.get(
+      [
+        'solutionsMap',
+        'solutionId',
+        'parameterMap',
+        'parameterIds',
+        'userId',
+        'parameterData',
+      ],
+      resolve,
+    )
+  );
+  const {
+    solutionsMap,
+    solutionId,
+    parameterMap,
+    parameterIds,
+    userId,
+    parameterData,
+  } = data;
+  const multipleZones = solutionsMap && parameterMap;
+
+  if (multipleZones) {
+    if (!userId) {
+      sendStatus('ID manquant pour la connexion.', 'error', true);
+      return;
+    }
+  } else if (
+    !solutionId ||
+    !Array.isArray(parameterIds) ||
+    parameterIds.length === 0 ||
+    !userId
+  ) {
+    sendStatus('ID manquant pour la connexion.', 'error', true);
+    return;
+  }
+
+  const BOSSID = await getBOSSID();
+  if (!BOSSID) {
+    sendStatus('Le cookie BOSSID est introuvable.', 'error', true);
+    return;
+  }
+
+  const idToZone = {};
+  if (Array.isArray(parameterData)) {
+    for (const p of parameterData) idToZone[p.id] = p.zone;
+  }
+
+  const paramErrors = [];
+  if (multipleZones) {
+    for (const [pidKey, pid] of Object.entries(parameterMap)) {
+      const sid = solutionsMap[pidKey];
+      if (!sid) {
+        paramErrors.push(pidKey);
+        continue;
+      }
+      try {
+        const body = new URLSearchParams({ solutionId: sid });
+        const res = await fetchWithCookie(
+          `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+          'POST',
+          BOSSID,
+          { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        );
+        if (!res.ok && res.status !== 302) paramErrors.push(pidKey);
+      } catch {
+        paramErrors.push(pidKey);
+      }
+    }
+  } else {
+    for (const pid of parameterIds) {
+      try {
+        const body = new URLSearchParams({ solutionId });
+        const res = await fetchWithCookie(
+          `https://backoffice.epack-manager.com/epack/configurateur/addSolutionToConfiguration/${pid}`,
+          'POST',
+          BOSSID,
+          { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        );
+        if (!res.ok && res.status !== 302) paramErrors.push(pid);
+      } catch {
+        paramErrors.push(pid);
+      }
+    }
+  }
+
+  let userError = null;
+  const solutionIds = multipleZones
+    ? Object.values(solutionsMap)
+    : [solutionId];
+  for (const sid of solutionIds) {
+    try {
+      const body = new URLSearchParams({
+        referer: 'epack_manager_user_show',
+        solutionId: sid,
+      });
+      const userRes = await fetchWithCookie(
+        `https://backoffice.epack-manager.com/epack/manager/user/addSolutionToUser/${userId}`,
+        'POST',
+        BOSSID,
+        { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      );
+      if (!userRes.ok) userError = `user association -> ${userRes.status}`;
+    } catch (err) {
+      userError = err.message;
+    }
+  }
+
+  if (!userError && paramErrors.length === 0) {
+    sendStatus('Associations réalisées avec succès !', 'success', true);
+  } else if (!userError) {
+    const displayErr = paramErrors
+      .map((id) => idToZone[id] || id)
+      .join(', ');
+    sendStatus(
+      `Utilisateur associé mais paramètres en échec : ${displayErr}`,
+      'error',
+      true,
+    );
+  } else {
+    sendStatus(`Erreur association utilisateur : ${userError}`, 'error', true);
+  }
+}
+
+// Effectue toutes les actions puis les associations
+async function doEverythingAction() {
+  await doAllAction();
+  await wait(2000);
+  await connectAllAction();
+}
+
 self.backgroundActions = {
   createSolutionAction,
   createUserAction,
   openParamAction,
+  connectAllAction,
   doAllAction,
+  doEverythingAction,
 };
 
