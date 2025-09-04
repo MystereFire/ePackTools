@@ -4,8 +4,6 @@
   "version": "1.0",
   "description": "Une extension pour gérer les solutions/utilisateurs sur backoffice.epack-manager.com.",
   "permissions": [
-    "webRequest",
-    "webRequestBlocking",
     "scripting",
     "activeTab",
     "storage",
@@ -41,6 +39,11 @@
       ],
       "js": ["scripts/solution-copy.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chr-num.odoo.com/*"],
+      "js": ["scripts/request-interceptor.js"],
+      "run_at": "document_start"
     }
   ],
   "action": {
