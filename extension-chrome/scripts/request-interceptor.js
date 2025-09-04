@@ -17,6 +17,7 @@
         const url = typeof input === 'string' ? input : input.url;
         const method = (init && init.method) || 'GET';
         const body = init && init.body;
+        console.log(`[request-interceptor] ${method} ${url}`);
         if (method === 'POST' && body) {
           if (typeof body === 'string') {
             handleRequest(url, body);
@@ -43,6 +44,7 @@
 
     XMLHttpRequest.prototype.send = function(body) {
       try {
+        console.log(`[request-interceptor] ${this._method} ${this._url}`);
         if (this._method === 'POST' && typeof body === 'string') {
           handleRequest(this._url, body);
         }
