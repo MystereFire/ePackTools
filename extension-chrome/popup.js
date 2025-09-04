@@ -69,11 +69,9 @@ function checkIfUserExists(email, callback) {
     .then((html) => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
-      const userIdCell = doc.querySelector(
-        "table.table-bordered tr.color td:first-child",
-      );
-      if (userIdCell) {
-        const userId = userIdCell.textContent.trim();
+      const row = doc.querySelector("table.table-bordered tbody tr");
+      const userId = row ? row.querySelector("td")?.textContent.trim() : null;
+      if (userId) {
         chrome.storage.local.set({ userId });
         callback(userId);
       } else {
