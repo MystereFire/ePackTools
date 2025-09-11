@@ -4,24 +4,25 @@
   "version": "1.0",
   "description": "Une extension pour gérer les solutions/utilisateurs sur backoffice.epack-manager.com.",
   "permissions": [
+    "webRequest",
+    "scripting",
     "activeTab",
     "storage",
     "cookies",
     "tabs",
-    "alarms",
-    "notifications"
-  ],
-  "host_permissions": [
-    "http://localhost:3000/*",
-    "https://api.bluconsole.com/*",
-    "https://backoffice.epack-manager.com/*",
-    "https://chr-num.odoo.com/*"
+    "alarms"
   ],
   "web_accessible_resources": [
     {
       "resources": ["sondes.html"],
       "matches": ["<all_urls>"]
     }
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://api.bluconsole.com/*",
+    "https://backoffice.epack-manager.com/*",
+    "https://chr-num.odoo.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -38,11 +39,6 @@
       ],
       "js": ["scripts/solution-copy.js"],
       "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://chr-num.odoo.com/*"],
-      "js": ["scripts/request-interceptor.js"],
-      "run_at": "document_start"
     }
   ],
   "action": {
