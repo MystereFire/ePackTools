@@ -1,7 +1,7 @@
 // Fonctions de vérification des sondes et hubs
 import { updateSondeOutput } from "./popup-ui.js";
 
-const DEFAULT_PROXY_URL = "https://api.ligma.fr/blulog";
+export const DEFAULT_PROXY_URL = "https://api.ligma.fr/blulog";
 let proxyURL = DEFAULT_PROXY_URL;
 chrome.storage.local.get("proxyURL", (data) => {
   if (data.proxyURL) proxyURL = data.proxyURL;

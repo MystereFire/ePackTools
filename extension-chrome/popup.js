@@ -5,7 +5,7 @@ import {
   updateOutput,
   updateSondeOutput,
 } from "./scripts/popup-ui.js";
-import { sondeUtils } from "./scripts/sondes.js";
+import { sondeUtils, DEFAULT_PROXY_URL } from "./scripts/sondes.js";
 import {
   normalizeText,
   integratorKey,
@@ -20,6 +20,8 @@ import {
   getLangFromCountry,
   getFlagEmoji,
 } from "./scripts/utils.js";
+
+let proxyURL = DEFAULT_PROXY_URL;
 
 async function createUser(BOSSID, userData) {
   try {
