@@ -1,5 +1,11 @@
 const icons = { info: "ℹ️", warn: "⚠️", error: "❌", success: "✅" };
 
+/**
+ * Affiche un message dans la console avec un emoji et un timestamp.
+ * @param {"info"|"warn"|"error"|"success"} type
+ * @param {string} message
+ * @param {...any} rest
+ */
 function log(type, message, ...rest) {
   const emoji = icons[type] || "";
   const ts = new Date().toISOString();
@@ -9,7 +15,7 @@ function log(type, message, ...rest) {
   else console.log(`${ts} ${emoji} ${message}`, ...rest);
 }
 
-self.logger = {
+export const logger = {
   info: (m, ...a) => log("info", m, ...a),
   warn: (m, ...a) => log("warn", m, ...a),
   error: (m, ...a) => log("error", m, ...a),

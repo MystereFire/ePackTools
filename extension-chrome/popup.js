@@ -1,173 +1,25 @@
-// Fonctions UX dans scripts/popup-ui.js
-
-// proxyURL is defined in scripts/sondes.js
-
-// Utilitaires ---------------------------------------------------------------
-
-function normalizeText(str) {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[_\s]+/g, "")
-    .toLowerCase();
-}
-
-function integratorKey(name) {
-  if (!name) return "";
-  const cleanName = name.replace(/_/g, " ").trim();
-  const parts = cleanName.split(/\s+/);
-
-  // Cas 1 : Un seul mot
-  if (parts.length === 1) {
-    return normalizeText(parts[0]);
-  }
-
-  // Cas 2 : Plusieurs mots
-  const prenomInitial = parts[0][0] || "";
-  const nom = parts.slice(1).join("");
-  return normalizeText(prenomInitial + nom);
-}
-
-function keysMatch(a, b) {
-  if (!a || !b) return false;
-  return a === b || a.startsWith(b) || b.startsWith(a);
-}
-
-function autoResizeTextarea(el) {
-  el.style.height = "auto";
-  el.style.height = `${el.scrollHeight}px`;
-}
-
-function getBOSSID(callback) {
-  chrome.cookies.get(
-    { url: "https://backoffice.epack-manager.com", name: "BOSSID" },
-    function (cookie) {
-      callback(cookie ? cookie.value : null);
-    },
-  );
-}
-
-function fetchWithCookie(url, method, BOSSID, headers = {}, body = null) {
-  return fetch(url, {
-    method,
-    headers: {
-      Cookie: `BOSSID=${BOSSID}`,
-      ...headers,
-    },
-    body,
-  });
-}
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function checkIfUserExists(email, callback) {
-  const url = `https://backoffice.epack-manager.com/epack/manager/user/?search=${encodeURIComponent(email)}`;
-  fetch(url, { method: "GET", credentials: "include" })
-    .then((response) => response.text())
-    .then((html) => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const userIdCell = doc.querySelector(
-        "table.table-bordered tr.color td:first-child",
-      );
-      if (userIdCell) {
-        const userId = userIdCell.textContent.trim();
-        chrome.storage.local.set({ userId });
-        callback(userId);
-      } else {
-        callback(null);
-      }
-    })
-    .catch((error) => {
-      console.error("Erreur vérification utilisateur :", error);
-      callback(null);
-    });
-}
-
-function splitName(name) {
-  const parts = name.split(" ");
-  const prenom = parts.find((part) => part[0] === part[0].toUpperCase());
-  const nom = parts
-    .filter((part) => part !== prenom)
-    .join(" ")
-    .toUpperCase();
-  return { nom, prenom };
-}
-
-function getLangId(code) {
-  const map = {
-    fr_FR: "1",
-    en_US: "2",
-    en_GB: "2",
-    it_IT: "3",
-    de_DE: "4",
-    pt_PT: "5",
-    pt_BR: "5",
-    es_ES: "6",
-    pl_PL: "7",
-    ca_ES: "8",
-    nl_NL: "9",
-    zh_CN: "10",
-    zh_TW: "10",
-    ar_SY: "11",
-    ar_EG: "11",
-    ar: "11",
-    el_GR: "12",
-  };
-  return map[code] || "1";
-}
-
-function getLangFromCountry(country) {
-  const map = {
-    France: "fr_FR",
-    Belgique: "fr_FR",
-    Suisse: "fr_FR",
-    Canada: "en_US",
-    "États-Unis": "en_US",
-    "Royaume-Uni": "en_GB",
-    Espagne: "es_ES",
-    Italie: "it_IT",
-    Allemagne: "de_DE",
-    Portugal: "pt_PT",
-    Brésil: "pt_BR",
-    "Pays-Bas": "nl_NL",
-    Pologne: "pl_PL",
-    Chine: "zh_CN",
-    Grèce: "el_GR",
-    "Arabie saoudite": "ar_SY",
-    Égypte: "ar_EG",
-    "Émirats arabes unis": "ar_SY",
-  };
-  return map[country] || "fr_FR";
-}
-
-function getFlagEmoji(country) {
-  const codes = {
-    France: "FR",
-    Belgique: "BE",
-    Suisse: "CH",
-    Canada: "CA",
-    "États-Unis": "US",
-    "Royaume-Uni": "GB",
-    Espagne: "ES",
-    Italie: "IT",
-    Allemagne: "DE",
-    Portugal: "PT",
-    Brésil: "BR",
-    "Pays-Bas": "NL",
-    Pologne: "PL",
-    Chine: "CN",
-    Grèce: "GR",
-    "Arabie saoudite": "SA",
-    Égypte: "EG",
-    "Émirats arabes unis": "AE",
-  };
-  const code = codes[country];
-  if (!code) return "";
-  const first = String.fromCodePoint(0x1f1e6 + code.charCodeAt(0) - 65);
-  const second = String.fromCodePoint(0x1f1e6 + code.charCodeAt(1) - 65);
-  return first + second;
-}
+// Fonctions utilitaires et UI importées
+import {
+  showLoader,
+  hideLoader,
+  updateOutput,
+  updateSondeOutput,
+} from "./scripts/popup-ui.js";
+import { sondeUtils } from "./scripts/sondes.js";
+import {
+  normalizeText,
+  integratorKey,
+  keysMatch,
+  autoResizeTextarea,
+  getBOSSID,
+  fetchWithCookie,
+  wait,
+  checkIfUserExists,
+  splitName,
+  getLangId,
+  getLangFromCountry,
+  getFlagEmoji,
+} from "./scripts/utils.js";
 
 async function createUser(BOSSID, userData) {
   try {

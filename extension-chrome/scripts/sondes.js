@@ -1,4 +1,5 @@
 // Fonctions de vérification des sondes et hubs
+import { updateSondeOutput } from "./popup-ui.js";
 
 const DEFAULT_PROXY_URL = "https://api.ligma.fr/blulog";
 let proxyURL = DEFAULT_PROXY_URL;
@@ -6,7 +7,10 @@ chrome.storage.local.get("proxyURL", (data) => {
   if (data.proxyURL) proxyURL = data.proxyURL;
 });
 
-// Réauthentifie l'utilisateur BluConsole si besoin
+/**
+ * Réauthentifie l'utilisateur BluConsole si besoin.
+ * @returns {Promise<{token: string, rtoken: string}>}
+ */
 function relogin() {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(
@@ -49,7 +53,11 @@ function relogin() {
   });
 }
 
-// Effectue un appel HTTP et retente après relogin si 401
+/**
+ * Effectue un appel HTTP et retente après relogin si 401.
+ * @param {string} url
+ * @param {(creds:{token:string,rtoken:string})=>void} [updateTokens]
+ */
 async function fetchWithAuthRetry(url, updateTokens) {
   let res = await fetch(url);
   if (res.status === 401) {
@@ -67,7 +75,11 @@ async function fetchWithAuthRetry(url, updateTokens) {
   return res.json();
 }
 
-// Vérifie l'état d'une liste d'identifiants de sondes/hubs
+/**
+ * Vérifie l'état d'une liste d'identifiants de sondes/hubs.
+ * @param {string[]} ids
+ * @returns {Promise<string[]>}
+ */
 function verifierSondesListe(ids) {
   return new Promise((resolve) => {
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -182,5 +194,5 @@ function verifierSondes() {
   });
 }
 
-// Expose les fonctions au reste du popup
-self.sondeUtils = { verifierSondes, verifierSondesListe, relogin };
+// Expose les fonctions au reste du projet
+export const sondeUtils = { verifierSondes, verifierSondesListe, relogin };
