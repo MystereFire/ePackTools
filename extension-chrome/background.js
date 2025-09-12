@@ -1,11 +1,8 @@
 // Service worker principal de l'extension
-// Importe le logger et les modules utilitaires
-importScripts(
-  "logger.js",
-  "scripts/storage.js",
-  "scripts/api.js",
-  "scripts/sondes.js",
-);
+import { logger } from "./logger.js";
+import { storageUtils } from "./scripts/storage.js";
+import { api } from "./scripts/api.js";
+import { sondeUtils } from "./scripts/sondes.js";
 
 // Planifie un test de connexion toutes les 20 minutes
 function initLoginCron() {

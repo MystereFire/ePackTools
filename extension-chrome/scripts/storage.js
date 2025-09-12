@@ -5,14 +5,14 @@ let firstReadRequestCaptured = false;
 let shouldCaptureRequest = true;
 let shouldCaptureDataRequest = true;
 
-// Réinitialise les indicateurs quand une nouvelle page se charge
+/** Réinitialise les indicateurs quand une nouvelle page se charge. */
 function resetCaptureFlags() {
   shouldCaptureRequest = true;
   firstReadRequestCaptured = false;
   shouldCaptureDataRequest = true;
 }
 
-// Supprime les données précédemment enregistrées dans chrome.storage
+/** Supprime les données précédemment enregistrées dans chrome.storage. */
 function cleanData() {
   chrome.storage.local.remove(
     ["clientData", "managerInfo", "parameterData"],
@@ -20,17 +20,24 @@ function cleanData() {
   );
 }
 
-// Enveloppe simple autour de chrome.storage.local.set
+/**
+ * Enveloppe simple autour de chrome.storage.local.set
+ * @param {string} key
+ * @param {any} data
+ */
 function storeData(key, data) {
   chrome.storage.local.set({ [key]: data }, () => {});
 }
 
-// Génère un identifiant aléatoire
+/**
+ * Génère un identifiant aléatoire.
+ * @returns {string}
+ */
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
 
-self.storageUtils = {
+export const storageUtils = {
   resetCaptureFlags,
   cleanData,
   storeData,

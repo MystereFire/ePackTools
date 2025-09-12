@@ -14,6 +14,21 @@ par interception des requêtes réseau envoyées par Odoo lors de la
 consultation d'un devis. Les informations sont stockées dans `chrome.storage` et
 présentées dans la fenêtre popup de l'extension.
 
+## Structure du code
+
+Le code de l'extension est maintenant découpé en modules ES6 commentés :
+
+- `popup.js` : logique principale du popup, important les modules ci‑dessous.
+- `scripts/popup-ui.js` : fonctions d'affichage (loader, messages, etc.).
+- `scripts/sondes.js` : vérification et authentification des sondes BluConsole.
+- `scripts/storage.js` : helpers autour de `chrome.storage`.
+- `scripts/api.js` : appels réseau vers Odoo pour récupérer clients/managers et paramètres.
+- `scripts/utils.js` : utilitaires généraux (normalisation, langues, cookies...).
+- `logger.js` : petit logger coloré utilisé par le service worker et le popup.
+
+Tous ces fichiers utilisent désormais la syntaxe `import`/`export` et sont
+documentés par des commentaires JSDoc pour faciliter la compréhension.
+
 ## Installation
 
 1. Ouvrir Chrome et activer le **mode développeur** dans la page

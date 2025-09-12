@@ -1,6 +1,12 @@
 // Fonctions réseau utilisées dans le service worker
-// storageUtils et logger doivent être déjà chargés
+import { logger } from "../logger.js";
+import { storageUtils } from "./storage.js";
 
+/**
+ * Récupère un partenaire Odoo et stocke le résultat.
+ * @param {number} id
+ * @param {"client"|"manager"} label
+ */
 function fetchResPartner(id, label) {
   const url = "https://chr-num.odoo.com/web/dataset/call_kw/res.partner/read";
   const headers = {
@@ -69,6 +75,10 @@ function fetchResPartner(id, label) {
     );
 }
 
+/**
+ * Récupère les identifiants client/manager à partir d'un devis.
+ * @param {number} orderId
+ */
 function fetchIdFromOrder(orderId) {
   const url = "https://chr-num.odoo.com/web/dataset/call_kw/sale.order/read";
   const headers = {
@@ -124,6 +134,10 @@ function fetchIdFromOrder(orderId) {
     );
 }
 
+/**
+ * Extrait les paramètres depuis les pièces jointes d'un fil de discussion Odoo.
+ * @param {string} requestBody Corps de la requête interceptée
+ */
 function fetchFiles(requestBody) {
   const url = "https://chr-num.odoo.com/mail/thread/data";
   const headers = {
@@ -171,4 +185,4 @@ function fetchFiles(requestBody) {
     .catch((e) => logger.error(`Erreur duplication mail/thread/data : ${e}`));
 }
 
-self.api = { fetchResPartner, fetchIdFromOrder, fetchFiles };
+export const api = { fetchResPartner, fetchIdFromOrder, fetchFiles };

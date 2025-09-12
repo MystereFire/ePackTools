@@ -1,20 +1,28 @@
 // Fonctions utilitaires pour l'interface popup
-// Affiche un loader avec un message
-function showLoader(msg = "Chargement...") {
+
+/**
+ * Affiche un loader avec un message personnalisé.
+ * @param {string} [msg="Chargement..."]
+ */
+export function showLoader(msg = "Chargement...") {
   const loader = document.getElementById("loader");
   if (!loader) return;
   loader.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${msg}`;
   loader.style.display = "block";
 }
 
-// Masque l'élément de chargement
-function hideLoader() {
+/** Masque l'élément de chargement. */
+export function hideLoader() {
   const loader = document.getElementById("loader");
   if (loader) loader.style.display = "none";
 }
 
-// Affiche un message dans le bloc de sortie générique
-function updateOutput(message, type = "info") {
+/**
+ * Affiche un message dans le bloc de sortie générique.
+ * @param {string} message
+ * @param {"info"|"success"|"error"} [type="info"]
+ */
+export function updateOutput(message, type = "info") {
   const outputDiv = document.getElementById("output");
   if (!outputDiv) return;
   outputDiv.style.display = "block";
@@ -26,8 +34,12 @@ function updateOutput(message, type = "info") {
   outputDiv.innerHTML = message;
 }
 
-// Fonction d'affichage pour le panneau des sondes
-function updateSondeOutput(message, type = "info") {
+/**
+ * Affiche un message dans la section sondes.
+ * @param {string} message
+ * @param {"info"|"success"|"error"} [type="info"]
+ */
+export function updateSondeOutput(message, type = "info") {
   const outputDiv = document.getElementById("sonde-output");
   if (!outputDiv) return;
   outputDiv.style.display = "block";
