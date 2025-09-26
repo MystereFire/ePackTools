@@ -217,7 +217,7 @@ function recupererStockSondes() {
             return (
               `${res.serial} 📦 ` +
               res.quants
-                .map((q) => `${q.locationName} — ${q.productName} (Qty: ${q.quantity})`)
+                .map((q) => q.locationName)
                 .join(" | ")
             );
           case "no_stock":
