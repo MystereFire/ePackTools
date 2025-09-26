@@ -183,7 +183,8 @@ h2 {
   overflow-y: hidden;
 }
 
-#verifierSondes {
+#verifierSondes,
+#stockSondes {
   background-color: var(--primary-color);
   color: var(--text-light);
   border: none;
@@ -193,7 +194,8 @@ h2 {
   transition: background-color 0.3s ease;
 }
 
-#verifierSondes:hover {
+#verifierSondes:hover,
+#stockSondes:hover {
   background-color: var(--primary-hover);
 }
 

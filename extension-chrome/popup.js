@@ -194,6 +194,17 @@ document.getElementById("verifierSondes").addEventListener("click", () => {
   });
 });
 
+document.getElementById("stockSondes").addEventListener("click", () => {
+  const ids = document
+    .getElementById("sonde-ids")
+    .value.split("\n")
+    .filter((line) => line.trim() && !/^[-]{3,}$/.test(line.trim()))
+    .map((line) => line.split(" ")[0].trim());
+  chrome.storage.local.set({ sondeIds: ids }, () => {
+    sondeUtils.recupererStockSondes();
+  });
+});
+
 // Créer une solution
 async function createSolutionAction() {
   const btn = document.getElementById("createSolution");

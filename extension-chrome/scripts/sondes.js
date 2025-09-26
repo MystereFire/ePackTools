@@ -1,5 +1,6 @@
 // Fonctions de vérification des sondes et hubs
 import { updateSondeOutput } from "./popup-ui.js";
+import { fetchSondeStocks } from "./odoo-stock.js";
 
 export const DEFAULT_PROXY_URL = "https://api.ligma.fr/blulog";
 let proxyURL = DEFAULT_PROXY_URL;
@@ -194,5 +195,58 @@ function verifierSondes() {
   });
 }
 
+function recupererStockSondes() {
+  const textarea = document.getElementById("sonde-ids");
+  const rawLines = textarea.value
+    .split("\n")
+    .filter((line) => line.trim() && !/^[-]{3,}$/.test(line.trim()));
+
+  if (rawLines.length === 0) {
+    updateSondeOutput("Veuillez entrer au moins un ID.", "error");
+    return;
+  }
+
+  const cleanedIds = rawLines.map((line) => line.split(" ")[0].trim());
+  updateSondeOutput("Recherche du stock des sondes...", "info");
+
+  fetchSondeStocks(cleanedIds)
+    .then((results) => {
+      const formatted = results.map((res) => {
+        switch (res.status) {
+          case "ok":
+            return (
+              `${res.serial} 📦 ` +
+              res.quants
+                .map((q) => `${q.locationName} — ${q.productName} (Qty: ${q.quantity})`)
+                .join(" | ")
+            );
+          case "no_stock":
+            return `${res.serial} ⚠️ Aucun stock disponible`;
+          case "not_found":
+            return `${res.serial} ❌ Lot introuvable`;
+          case "error":
+          default:
+            return `${res.serial} ❌ Erreur: ${res.message || "Impossible de récupérer le stock"}`;
+        }
+      });
+
+      textarea.value = formatted.join("\n---\n");
+      chrome.storage.local.set({ lastSondeResults: formatted });
+      textarea.dispatchEvent(new Event("input"));
+      updateSondeOutput("Stocks récupérés depuis Odoo.", "success");
+    })
+    .catch((error) => {
+      updateSondeOutput(
+        `Erreur lors de la récupération des stocks: ${error.message}`,
+        "error",
+      );
+    });
+}
+
 // Expose les fonctions au reste du projet
-export const sondeUtils = { verifierSondes, verifierSondesListe, relogin };
+export const sondeUtils = {
+  verifierSondes,
+  verifierSondesListe,
+  relogin,
+  recupererStockSondes,
+};
