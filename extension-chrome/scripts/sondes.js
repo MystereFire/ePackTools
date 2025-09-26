@@ -214,12 +214,12 @@ function recupererStockSondes() {
       const formatted = results.map((res) => {
         switch (res.status) {
           case "ok":
-            return (
-              `${res.serial} 📦 ` +
-              res.quants
-                .map((q) => q.locationName)
-                .join(" | ")
-            );
+            if (res.quants && res.quants.length > 0) {
+              const last = res.quants[res.quants.length - 1];
+              return `${res.serial} 📦 ${last.locationName}`;
+            } else {
+              return `${res.serial} ⚠️ Stock introuvable`;
+            }
           case "no_stock":
             return `${res.serial} ⚠️ Aucun stock disponible`;
           case "not_found":
