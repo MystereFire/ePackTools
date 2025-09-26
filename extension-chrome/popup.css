@@ -144,17 +144,35 @@ h2 {
 #sonde-login-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
+  gap: 14px;
   margin: 20px 0;
 }
 
 #sonde-login-form input {
-  width: 80%;
+  width: 100%;
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+}
+
+#sonde-login-form .form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+
+#sonde-login-form .form-section h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--primary-color);
 }
 
 #sonde-login-form button {

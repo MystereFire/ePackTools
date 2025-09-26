@@ -63,19 +63,39 @@
         <div id="login-section" style="display: none">
           <h2>🧪 Paramètres de connexion</h2>
           <form id="sonde-login-form">
-            <input
-              type="email"
-              id="sonde-email"
-              placeholder="Adresse email"
-              required
-            />
-            <input
-              type="password"
-              id="sonde-password"
-              placeholder="Mot de passe"
-              required
-            />
-            <input type="text" id="proxy-url" placeholder="URL du proxy" />
+            <div class="form-section">
+              <h3>🔌 Identifiants BluConsole</h3>
+              <input
+                type="email"
+                id="sonde-email"
+                placeholder="Adresse email"
+                required
+              />
+              <input
+                type="password"
+                id="sonde-password"
+                placeholder="Mot de passe"
+                required
+              />
+              <input
+                type="text"
+                id="proxy-url"
+                placeholder="URL du proxy"
+              />
+            </div>
+            <div class="form-section">
+              <h3>📦 Identifiants Odoo</h3>
+              <input
+                type="email"
+                id="odoo-email"
+                placeholder="Adresse email Odoo"
+              />
+              <input
+                type="text"
+                id="odoo-api-key"
+                placeholder="Clé API Odoo"
+              />
+            </div>
             <div class="button-row">
               <button type="submit" id="saveSonde">
                 <i class="fas fa-save"></i> Enregistrer

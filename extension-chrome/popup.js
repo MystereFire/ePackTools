@@ -6,6 +6,7 @@ import {
   updateSondeOutput,
 } from "./scripts/popup-ui.js";
 import { sondeUtils, DEFAULT_PROXY_URL } from "./scripts/sondes.js";
+import { resetOdooSession } from "./scripts/odoo-stock.js";
 import {
   normalizeText,
   integratorKey,
@@ -97,7 +98,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const sondeTextarea = document.getElementById("sonde-ids");
   sondeTextarea.addEventListener("input", () => autoResizeTextarea(sondeTextarea));
   chrome.storage.local.get(
-    ["probeEmail", "probePassword", "proxyURL", "sondeIds", "lastSondeResults"],
+    [
+      "probeEmail",
+      "probePassword",
+      "proxyURL",
+      "odooEmail",
+      "odooApiKey",
+      "sondeIds",
+      "lastSondeResults",
+    ],
     (data) => {
       if (data.probeEmail) {
         document.getElementById("sonde-email").value = data.probeEmail;
@@ -110,6 +119,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("proxy-url").value = data.proxyURL;
       } else {
         document.getElementById("proxy-url").value = DEFAULT_PROXY_URL;
+      }
+
+      if (data.odooEmail) {
+        document.getElementById("odoo-email").value = data.odooEmail;
+      }
+      if (data.odooApiKey) {
+        document.getElementById("odoo-api-key").value = data.odooApiKey;
       }
 
       if (Array.isArray(data.sondeIds)) {
@@ -129,6 +145,8 @@ document.getElementById("sonde-login-form").addEventListener("submit", (e) => {
   const password = document.getElementById("sonde-password").value.trim();
   const pUrl =
     document.getElementById("proxy-url").value.trim() || DEFAULT_PROXY_URL;
+  const odooEmail = document.getElementById("odoo-email").value.trim();
+  const odooApiKey = document.getElementById("odoo-api-key").value.trim();
   proxyURL = pUrl;
 
   chrome.storage.local.set(
@@ -136,9 +154,15 @@ document.getElementById("sonde-login-form").addEventListener("submit", (e) => {
       probeEmail: email,
       probePassword: password,
       proxyURL: pUrl,
+      odooEmail,
+      odooApiKey,
     },
     () => {
-      updateSondeOutput("🧪 Identifiants enregistrés avec succès !", "success");
+      resetOdooSession();
+      updateSondeOutput(
+        "🧪 Identifiants BluConsole et Odoo enregistrés !",
+        "success",
+      );
     },
   );
 });
