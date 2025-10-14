@@ -293,6 +293,8 @@ async function createSolutionAction() {
           "solution[ticketfile]": "1",
           "solution[versionEpack]": "",
           "solution[ville]": client.city || "TEST",
+          "solution[typeVersion]": "V5",
+          "solution[statusMaj]": "1",
         });
 
         const response = await fetchWithCookie(
@@ -348,6 +350,8 @@ async function createSolutionAction() {
         "solution[ticketfile]": "1",
         "solution[versionEpack]": "",
         "solution[ville]": client.city || "TEST",
+        "solution[typeVersion]": "V5",
+        "solution[statusMaj]": "1",
       });
 
       const response = await fetchWithCookie(
