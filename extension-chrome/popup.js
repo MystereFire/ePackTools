@@ -23,6 +23,29 @@ import {
 
 let proxyURL = DEFAULT_PROXY_URL;
 
+const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+
+function switchTab(tabName) {
+  tabButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.tab === tabName);
+  });
+  tabPanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.tab === tabName);
+  });
+}
+
+if (tabButtons.length > 0) {
+  const defaultTab =
+    tabButtons.find((btn) => btn.classList.contains("active"))?.dataset.tab ||
+    "backoffice";
+  switchTab(defaultTab);
+}
+
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => switchTab(button.dataset.tab));
+});
+
 async function createUser(BOSSID, userData) {
   try {
     const html = await fetchWithCookie(
@@ -77,20 +100,25 @@ async function createUser(BOSSID, userData) {
   }
 }
 
-document.getElementById("openSonde").addEventListener("click", () => {
-  document.getElementById("main-panel").style.display = "none";
-  document.getElementById("sondes-panel").style.display = "block";
-});
+const openSondeButton = document.getElementById("openSonde");
+if (openSondeButton) {
+  openSondeButton.addEventListener("click", () => {
+    switchTab("sondes");
+    const sondesTabButton = document.querySelector(
+      '.tab-button[data-tab="sondes"]',
+    );
+    sondesTabButton?.focus();
+  });
+}
 
-document.getElementById("backToMain").addEventListener("click", () => {
-  document.getElementById("sondes-panel").style.display = "none";
-  document.getElementById("main-panel").style.display = "block";
-});
-
-document.getElementById("toggleLogin").addEventListener("click", () => {
-  const section = document.getElementById("login-section");
-  section.style.display = section.style.display === "none" ? "block" : "none";
-});
+const toggleLoginButton = document.getElementById("toggleLogin");
+if (toggleLoginButton) {
+  toggleLoginButton.addEventListener("click", () => {
+    const section = document.getElementById("login-section");
+    if (!section) return;
+    section.style.display = section.style.display === "none" ? "block" : "none";
+  });
+}
 
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {

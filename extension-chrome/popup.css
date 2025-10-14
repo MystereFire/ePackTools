@@ -22,6 +22,8 @@ body {
   border-radius: 10px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
 h1,
@@ -36,6 +38,59 @@ h2 {
   flex-wrap: wrap;
   gap: 10px;
   margin: 20px 0;
+}
+
+.tab-nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+
+.tab-button {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--text-light);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.tab-button.active {
+  background-color: var(--primary-color);
+  color: #0f241f;
+  border-color: transparent;
+}
+
+.tab-panel {
+  display: none;
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 #doAll,
@@ -72,27 +127,99 @@ h2 {
   transform: translateY(-2px);
 }
 
-#loader {
-  display: none;
-  margin-top: 10px;
-  color: var(--text-light);
-  font-size: 14px;
-  font-weight: 500;
+.feedback-layer {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  pointer-events: none;
 }
 
-#output {
-  margin-top: 20px;
-  white-space: pre-wrap;
+.toast-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.toast {
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 14px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  line-height: 1.4;
   text-align: left;
-  max-height: 150px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 10px;
-  background-color: #f9f9f9;
-  color: #000;
-  border-radius: 5px;
-  font-size: 14px;
   display: none;
+  pointer-events: auto;
+}
+
+.toast.visible {
+  display: block;
+}
+
+.toast-success {
+  background-color: rgba(76, 175, 80, 0.92);
+}
+
+.toast-error {
+  background-color: rgba(244, 67, 54, 0.92);
+}
+
+.toast-info {
+  background-color: rgba(33, 150, 243, 0.92);
+}
+
+.history-toast {
+  min-width: 200px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: none;
+}
+
+.history-toast.visible {
+  display: block;
+}
+
+.history-toast h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+#history-list li {
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
+
+#history-list li[data-type="success"] {
+  color: #b4f1a8;
+}
+
+#history-list li[data-type="error"] {
+  color: #ffb3a7;
+}
+
+#history-list li[data-type="info"] {
+  color: #9cd0ff;
 }
 
 #client-info {
@@ -175,10 +302,11 @@ h2 {
   text-align: left;
 }
 
-#sonde-login-form .form-section h3 {
-  margin: 0;
+#sonde-login-form .form-section legend {
+  margin: 0 0 6px;
   font-size: 16px;
   color: var(--primary-color);
+  font-weight: 600;
 }
 
 #sonde-login-form button {
@@ -284,7 +412,7 @@ h2 {
 
 .credentials-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 10px;
 }

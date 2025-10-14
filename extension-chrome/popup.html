@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,18 +18,26 @@
   <body>
     <div class="container">
       <h1>ePack Tools</h1>
-      <div id="main-panel">
+
+      <div class="tab-nav">
+        <button class="tab-button active" data-tab="backoffice">
+          Backoffice
+        </button>
+        <button class="tab-button" data-tab="sondes">Sondes</button>
+      </div>
+
+      <div id="main-panel" class="tab-panel active" data-tab="backoffice">
         <div class="button-group">
           <button
             id="createSolution"
-            title="Creer la solution V5"
+            title="Créer la solution V5"
             data-icon="V5"
           >
             V5
           </button>
           <button
             id="createSolutionV4"
-            title="Creer la solution V4"
+            title="Créer la solution V4"
             data-icon="V4"
           >
             V4
@@ -37,7 +45,7 @@
           <button id="createUser" title="Créer l'utilisateur">
             <i class="fas fa-user-plus"></i>
           </button>
-          <button id="openParam" title="Ouvrir le param">
+          <button id="openParam" title="Ouvrir le paramètre">
             <i class="fas fa-folder-open"></i>
           </button>
           <button id="doAll" title="Tout créer">
@@ -53,29 +61,25 @@
             <i class="fas fa-thermometer-half"></i>
           </button>
         </div>
-        <div id="loader"></div>
-        <div id="output"></div>
+
         <div>
-          <h2>Informations du Client</h2>
+          <h2>Informations du client</h2>
           <div id="client-info" class="info-card">Chargement...</div>
         </div>
       </div>
 
-      <div id="sondes-panel" style="display: none">
+      <div id="sondes-panel" class="tab-panel" data-tab="sondes">
         <div class="credentials-header">
-          <button id="backToMain">
-            <i class="fas fa-arrow-left"></i> Retour
-          </button>
           <button id="toggleLogin">
             <i class="fas fa-user"></i> Identifiants
           </button>
         </div>
 
         <div id="login-section" style="display: none">
-          <h2>🧪 Paramètres de connexion</h2>
+          <h2>Paramètres de connexion</h2>
           <form id="sonde-login-form">
-            <div class="form-section">
-              <h3>🔌 Identifiants BluConsole</h3>
+            <fieldset class="form-section">
+              <legend>Identifiants BluConsole</legend>
               <input
                 type="email"
                 id="sonde-email"
@@ -93,9 +97,9 @@
                 id="proxy-url"
                 placeholder="URL du proxy"
               />
-            </div>
-            <div class="form-section">
-              <h3>📦 Identifiants Odoo</h3>
+            </fieldset>
+            <fieldset class="form-section">
+              <legend>Identifiants Odoo</legend>
               <input
                 type="email"
                 id="odoo-email"
@@ -106,7 +110,7 @@
                 id="odoo-api-key"
                 placeholder="Clé API Odoo"
               />
-            </div>
+            </fieldset>
             <div class="button-row">
               <button type="submit" id="saveSonde">
                 <i class="fas fa-save"></i> Enregistrer
@@ -118,12 +122,8 @@
           </form>
         </div>
 
-        <div
-          id="sonde-output"
-          class="output-message"
-          style="display: none"
-        ></div>
-        <h3>🔍 Vérification de sondes</h3>
+        <div id="sonde-output" class="output-message" style="display: none"></div>
+        <h3>Vérification de sondes</h3>
         <textarea
           id="sonde-ids"
           rows="6"
@@ -139,6 +139,17 @@
 
       <div class="footer">
         <p>Développé par <a href="#">Matthias Canals</a></p>
+      </div>
+
+      <div class="feedback-layer" aria-live="polite">
+        <div id="history-toast" class="toast history-toast">
+          <h3>Historique</h3>
+          <ul id="history-list"></ul>
+        </div>
+        <div class="toast-stack">
+          <div id="loader" class="toast loader-toast"></div>
+          <div id="output" class="toast message-toast"></div>
+        </div>
       </div>
     </div>
     <script type="module" src="popup.js"></script>
