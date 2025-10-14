@@ -40,6 +40,11 @@ h2 {
   margin: 20px 0;
 }
 
+#doAll,
+#connectAll {
+  display: none;
+}
+
 .tab-nav {
   display: flex;
   justify-content: center;
@@ -93,11 +98,6 @@ h2 {
   }
 }
 
-#doAll,
-#connectAll {
-  display: none;
-}
-
 .button-group button {
   display: flex;
   align-items: center;
@@ -127,6 +127,35 @@ h2 {
   transform: translateY(-2px);
 }
 
+.settings-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+  z-index: 16;
+}
+
+.settings-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: rotate(15deg);
+}
+
+.settings-button i {
+  pointer-events: none;
+}
+
 .feedback-layer {
   position: absolute;
   left: 16px;
@@ -137,6 +166,7 @@ h2 {
   align-items: flex-end;
   gap: 16px;
   pointer-events: none;
+  z-index: 10;
 }
 
 .toast-stack {
@@ -279,15 +309,21 @@ h2 {
   flex-direction: column;
   align-items: stretch;
   gap: 14px;
-  margin: 20px 0;
+  margin: 0;
 }
 
 #sonde-login-form input {
   width: 100%;
   padding: 8px;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
   font-size: 14px;
+}
+
+#sonde-login-form input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 #sonde-login-form .form-section {
@@ -410,23 +446,66 @@ h2 {
   border: 1px solid #ccc;
 }
 
-.credentials-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
+.sondes-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
-#toggleLogin {
-  background-color: var(--primary-color);
+.container.settings-open .tab-nav,
+.container.settings-open .tab-panel,
+.container.settings-open .footer {
+  display: none;
+}
+
+.settings-section {
+  margin-top: 40px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(16, 32, 31, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  display: none;
+  text-align: left;
+  padding-bottom: 80px;
+  animation: fadeIn 0.2s ease;
+}
+
+.container.settings-open .settings-section {
+  display: block;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.settings-close {
   border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
+  background: none;
   color: var(--text-light);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 }
 
-#toggleLogin:hover {
-  background-color: var(--primary-hover);
+.settings-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.settings-form label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
 }

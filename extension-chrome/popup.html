@@ -18,6 +18,17 @@
   <body>
     <div class="container">
       <h1>ePack Tools</h1>
+      <button
+        type="button"
+        id="openSettings"
+        class="settings-button"
+        title="Paramètres d'identifiants"
+        aria-label="Paramètres d'identifiants"
+        aria-controls="settings-panel"
+        aria-expanded="false"
+      >
+        <i class="fas fa-cog"></i>
+      </button>
 
       <div class="tab-nav">
         <button class="tab-button active" data-tab="backoffice">
@@ -57,9 +68,6 @@
           <button id="doEverything" title="Tout faire">
             <i class="fas fa-robot"></i>
           </button>
-          <button id="openSonde" title="Ouvrir les sondes">
-            <i class="fas fa-thermometer-half"></i>
-          </button>
         </div>
 
         <div>
@@ -69,59 +77,9 @@
       </div>
 
       <div id="sondes-panel" class="tab-panel" data-tab="sondes">
-        <div class="credentials-header">
-          <button id="toggleLogin">
-            <i class="fas fa-user"></i> Identifiants
-          </button>
-        </div>
-
-        <div id="login-section" style="display: none">
-          <h2>Paramètres de connexion</h2>
-          <form id="sonde-login-form">
-            <fieldset class="form-section">
-              <legend>Identifiants BluConsole</legend>
-              <input
-                type="email"
-                id="sonde-email"
-                placeholder="Adresse email"
-                required
-              />
-              <input
-                type="password"
-                id="sonde-password"
-                placeholder="Mot de passe"
-                required
-              />
-              <input
-                type="text"
-                id="proxy-url"
-                placeholder="URL du proxy"
-              />
-            </fieldset>
-            <fieldset class="form-section">
-              <legend>Identifiants Odoo</legend>
-              <input
-                type="email"
-                id="odoo-email"
-                placeholder="Adresse email Odoo"
-              />
-              <input
-                type="text"
-                id="odoo-api-key"
-                placeholder="Clé API Odoo"
-              />
-            </fieldset>
-            <div class="button-row">
-              <button type="submit" id="saveSonde">
-                <i class="fas fa-save"></i> Enregistrer
-              </button>
-              <button type="button" id="testConnexion">
-                <i class="fas fa-plug"></i> Tester
-              </button>
-            </div>
-          </form>
-        </div>
-
+        <p class="sondes-hint">
+          Paramétrez vos identifiants BluConsole et Odoo via l’icône engrenage.
+        </p>
         <div id="sonde-output" class="output-message" style="display: none"></div>
         <h3>Vérification de sondes</h3>
         <textarea
@@ -140,6 +98,66 @@
       <div class="footer">
         <p>Développé par <a href="#">Matthias Canals</a></p>
       </div>
+
+      <section
+        id="settings-panel"
+        class="settings-section"
+        aria-hidden="true"
+        role="region"
+        aria-labelledby="settings-title"
+      >
+        <div class="settings-header">
+          <h2 id="settings-title">Paramètres</h2>
+          <button
+            type="button"
+            id="closeSettings"
+            class="settings-close"
+            aria-label="Fermer les paramètres"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="sonde-login-form" class="settings-form">
+          <fieldset class="form-section">
+            <legend>Identifiants BluConsole</legend>
+            <label for="sonde-email">Adresse email</label>
+            <input
+              type="email"
+              id="sonde-email"
+              placeholder="Adresse email"
+              required
+            />
+            <label for="sonde-password">Mot de passe</label>
+            <input
+              type="password"
+              id="sonde-password"
+              placeholder="Mot de passe"
+              required
+            />
+            <label for="proxy-url">URL du proxy</label>
+            <input type="text" id="proxy-url" placeholder="URL du proxy" />
+          </fieldset>
+          <fieldset class="form-section">
+            <legend>Identifiants Odoo</legend>
+            <label for="odoo-email">Adresse email Odoo</label>
+            <input
+              type="email"
+              id="odoo-email"
+              placeholder="Adresse email Odoo"
+            />
+            <label for="odoo-api-key">Clé API Odoo</label>
+            <input type="text" id="odoo-api-key" placeholder="Clé API Odoo" />
+          </fieldset>
+          <div class="button-row">
+            <button type="submit" id="saveSonde">
+              <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <button type="button" id="testConnexion">
+              <i class="fas fa-plug"></i> Tester
+            </button>
+          </div>
+        </form>
+      </section>
 
       <div class="feedback-layer" aria-live="polite">
         <div id="history-toast" class="toast history-toast">
