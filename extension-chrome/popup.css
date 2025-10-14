@@ -38,13 +38,23 @@ h2 {
   margin: 20px 0;
 }
 
+#doAll,
+#connectAll {
+  display: none;
+}
+
 .button-group button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 60px;
   height: 60px;
   border: none;
   border-radius: 12px;
   background-color: var(--primary-color);
   color: var(--text-light);
+  font-size: 18px;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color 0.3s,
@@ -60,10 +70,6 @@ h2 {
 .button-group button:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
-}
-
-.button-group button i {
-  font-size: 22px;
 }
 
 #loader {
@@ -196,6 +202,7 @@ h2 {
   padding: 8px;
   font-family: monospace;
   font-size: 13px;
+  min-height: 140px;
   margin: 10px 0;
   resize: vertical;
   overflow-y: hidden;

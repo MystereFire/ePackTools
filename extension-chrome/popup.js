@@ -230,8 +230,14 @@ document.getElementById("stockSondes").addEventListener("click", () => {
 });
 
 // Créer une solution
-async function createSolutionAction() {
-  const btn = document.getElementById("createSolution");
+async function createSolutionAction(typeVersion = "V5", buttonId = "createSolution") {
+  const btn = document.getElementById(buttonId);
+  if (!btn) {
+    updateOutput("Bouton introuvable pour la création de solution.", "error");
+    return;
+  }
+
+  const defaultIcon = btn.dataset.icon || `<i class="fas fa-desktop"></i>`;
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
 
@@ -247,7 +253,7 @@ async function createSolutionAction() {
   if (!BOSSID) {
     updateOutput("Le cookie BOSSID est introuvable.", "error");
     btn.disabled = false;
-    btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+    btn.innerHTML = defaultIcon;
     hideLoader();
     return;
   }
@@ -258,7 +264,7 @@ async function createSolutionAction() {
   if (!data.clientData) {
     updateOutput("Aucune donnée client trouvée.", "error");
     btn.disabled = false;
-    btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+    btn.innerHTML = defaultIcon;
     hideLoader();
     return;
   }
@@ -293,7 +299,7 @@ async function createSolutionAction() {
           "solution[ticketfile]": "1",
           "solution[versionEpack]": "",
           "solution[ville]": client.city || "TEST",
-          "solution[typeVersion]": "V5",
+          "solution[typeVersion]": typeVersion,
           "solution[statusMaj]": "1",
         });
 
@@ -350,7 +356,7 @@ async function createSolutionAction() {
         "solution[ticketfile]": "1",
         "solution[versionEpack]": "",
         "solution[ville]": client.city || "TEST",
-        "solution[typeVersion]": "V5",
+        "solution[typeVersion]": typeVersion,
         "solution[statusMaj]": "1",
       });
 
@@ -374,11 +380,15 @@ async function createSolutionAction() {
 
   hideLoader();
   btn.disabled = false;
-  btn.innerHTML = `<i class="fas fa-desktop"></i>`;
+  btn.innerHTML = defaultIcon;
 }
 
 document.getElementById("createSolution").addEventListener("click", () => {
-  createSolutionAction();
+  createSolutionAction("V5");
+});
+
+document.getElementById("createSolutionV4").addEventListener("click", () => {
+  createSolutionAction("V4", "createSolutionV4");
 });
 
 // 👤 Créer un utilisateur
@@ -777,16 +787,20 @@ document.addEventListener("DOMContentLoaded", () => {
         ? data.parameterData.length > 0
         : !!data.parameterData;
 
-      const createSolutionBtn = document.getElementById("createSolution");
-      if (createSolutionBtn) {
+      const solutionButtons = [
+        document.getElementById("createSolution"),
+        document.getElementById("createSolutionV4"),
+      ];
+      solutionButtons.forEach((btn) => {
+        if (!btn) return;
         if (hasClient) {
-          createSolutionBtn.disabled = false;
-          createSolutionBtn.classList.remove("button-error");
+          btn.disabled = false;
+          btn.classList.remove("button-error");
         } else {
-          createSolutionBtn.disabled = true;
-          createSolutionBtn.classList.add("button-error");
+          btn.disabled = true;
+          btn.classList.add("button-error");
         }
-      }
+      });
 
       const createUserBtn = document.getElementById("createUser");
       if (createUserBtn) {
