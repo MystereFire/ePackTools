@@ -1,9 +1,11 @@
 // Fonctions utilitaires pour l'interface popup
 
 const toastTimers = new WeakMap();
-const historyEntries = [];
-
 const TYPE_CLASSES = ["toast-success", "toast-error", "toast-info"];
+
+function notifyHeightChange() {
+  document.dispatchEvent(new CustomEvent("popupHeightChanged"));
+}
 
 function clearTimer(element) {
   const timer = toastTimers.get(element);
@@ -18,6 +20,7 @@ function hideToast(element) {
   clearTimer(element);
   element.classList.remove("visible", ...TYPE_CLASSES);
   element.innerHTML = "";
+  notifyHeightChange();
 }
 
 function renderToast(
@@ -45,50 +48,12 @@ function renderToast(
   }
 
   element.classList.add("visible");
+  notifyHeightChange();
 
   if (autoHide) {
     const timer = setTimeout(() => hideToast(element), duration);
     toastTimers.set(element, timer);
   }
-}
-
-function sanitizeMessage(message) {
-  const text = (message ?? "").toString();
-  return text.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-}
-
-function addHistoryEntry(message, type) {
-  const historyList = document.getElementById("history-list");
-  const historyToast = document.getElementById("history-toast");
-  if (!historyList || !historyToast) return;
-
-  const cleanMessage = sanitizeMessage(message);
-  if (!cleanMessage) return;
-
-  const entry = {
-    message: cleanMessage,
-    type,
-    time: new Date(),
-  };
-
-  historyEntries.unshift(entry);
-  if (historyEntries.length > 3) {
-    historyEntries.length = 3;
-  }
-
-  historyList.innerHTML = "";
-  historyEntries.forEach((item) => {
-    const li = document.createElement("li");
-    li.dataset.type = item.type || "info";
-    const timeLabel = item.time.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    li.textContent = `${timeLabel} · ${item.message}`;
-    historyList.appendChild(li);
-  });
-
-  historyToast.classList.toggle("visible", historyEntries.length > 0);
 }
 
 /**
@@ -125,11 +90,10 @@ export function updateOutput(message, type = "info") {
     allowHTML: true,
     duration: 7000,
   });
-  addHistoryEntry(message, type);
 }
 
 /**
- * Affiche un message dans la section sondes et l'ajoute à l'historique.
+ * Affiche un message dans la section sondes.
  * @param {string} message
  * @param {"info"|"success"|"error"} [type="info"]
  */
@@ -142,5 +106,5 @@ export function updateSondeOutput(message, type = "info") {
   outputDiv.style.borderColor =
     type === "success" ? "#c3e6cb" : type === "error" ? "#f5c6cb" : "#ccc";
   outputDiv.textContent = message;
-  addHistoryEntry(message, type);
+  notifyHeightChange();
 }

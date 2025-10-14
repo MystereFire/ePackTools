@@ -3,15 +3,21 @@
   --primary-hover: #4caf50;
   --error-color: #f44336;
   --bg-dark: #223836;
-  --bg-gradient: linear-gradient(135deg, #284a47, #1c2c2b);
   --text-light: #fff;
+}
+
+html,
+body {
+  height: auto;
+  min-height: 100%;
+  overflow: hidden;
 }
 
 body {
   font-family: "Roboto", Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: var(--bg-gradient);
+  background: var(--bg-dark);
   color: var(--text-light);
 }
 
@@ -20,10 +26,9 @@ body {
   padding: 20px;
   background-color: var(--bg-dark);
   border-radius: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   text-align: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 h1,
@@ -205,51 +210,6 @@ h2 {
 
 .toast-info {
   background-color: rgba(33, 150, 243, 0.92);
-}
-
-.history-toast {
-  min-width: 200px;
-  background-color: rgba(255, 255, 255, 0.08);
-  color: var(--text-light);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  display: none;
-}
-
-.history-toast.visible {
-  display: block;
-}
-
-.history-toast h3 {
-  margin: 0 0 6px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-#history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: left;
-}
-
-#history-list li {
-  margin-bottom: 4px;
-  opacity: 0.9;
-}
-
-#history-list li[data-type="success"] {
-  color: #b4f1a8;
-}
-
-#history-list li[data-type="error"] {
-  color: #ffb3a7;
-}
-
-#history-list li[data-type="info"] {
-  color: #9cd0ff;
 }
 
 #client-info {

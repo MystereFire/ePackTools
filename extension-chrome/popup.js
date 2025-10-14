@@ -25,6 +25,51 @@ let proxyURL = DEFAULT_PROXY_URL;
 
 const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+const settingsButton = document.getElementById("openSettings");
+const settingsPanel = document.getElementById("settings-panel");
+const closeSettingsButton = document.getElementById("closeSettings");
+const container = document.querySelector(".container");
+const feedbackLayer = document.querySelector(".feedback-layer");
+const MIN_POPUP_HEIGHT = 300;
+
+function updatePopupHeight() {
+  requestAnimationFrame(() => {
+    if (!container) return;
+    document.body.style.height = "auto";
+    document.documentElement.style.height = "auto";
+    document.body.style.minHeight = "0px";
+    document.documentElement.style.minHeight = "0px";
+
+    const containerRect = container.getBoundingClientRect();
+    let height = containerRect.height;
+
+    if (feedbackLayer) {
+      const layerRect = feedbackLayer.getBoundingClientRect();
+      const layerBottom = layerRect.bottom - containerRect.top;
+      height = Math.max(height, layerBottom + 20);
+    }
+
+    const ceilHeight = Math.ceil(Math.max(height, MIN_POPUP_HEIGHT));
+    document.body.style.height = `${ceilHeight}px`;
+    document.body.style.minHeight = `${ceilHeight}px`;
+    document.documentElement.style.height = `${ceilHeight}px`;
+    document.documentElement.style.minHeight = `${ceilHeight}px`;
+  });
+}
+
+if (container && typeof ResizeObserver !== "undefined") {
+  const resizeObserver = new ResizeObserver(() => updatePopupHeight());
+  resizeObserver.observe(container);
+  if (settingsPanel) {
+    resizeObserver.observe(settingsPanel);
+  }
+  if (feedbackLayer) {
+    resizeObserver.observe(feedbackLayer);
+  }
+  updatePopupHeight();
+}
+
+window.addEventListener("resize", updatePopupHeight);
 
 function switchTab(tabName) {
   tabButtons.forEach((button) => {
@@ -33,6 +78,30 @@ function switchTab(tabName) {
   tabPanels.forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.tab === tabName);
   });
+  updatePopupHeight();
+}
+
+function isSettingsOpen() {
+  return settingsPanel?.classList.contains("open");
+}
+
+function toggleSettings(open) {
+  if (!settingsPanel) return;
+  const shouldOpen = open ?? !isSettingsOpen();
+  settingsPanel.classList.toggle("open", shouldOpen);
+  settingsPanel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  settingsButton?.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+  container?.classList.toggle("settings-open", shouldOpen);
+
+  if (shouldOpen) {
+    const firstField = settingsPanel.querySelector(
+      "input, select, textarea, button",
+    );
+    firstField?.focus({ preventScroll: true });
+  } else {
+    settingsButton?.focus({ preventScroll: true });
+  }
+  updatePopupHeight();
 }
 
 if (tabButtons.length > 0) {
@@ -44,6 +113,26 @@ if (tabButtons.length > 0) {
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => switchTab(button.dataset.tab));
+});
+
+document.addEventListener("popupHeightChanged", () => updatePopupHeight());
+document.addEventListener("DOMContentLoaded", () => {
+  updatePopupHeight();
+});
+
+if (settingsButton) {
+  settingsButton.addEventListener("click", () => toggleSettings());
+  settingsButton.setAttribute("aria-expanded", "false");
+}
+
+if (closeSettingsButton) {
+  closeSettingsButton.addEventListener("click", () => toggleSettings(false));
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isSettingsOpen()) {
+    toggleSettings(false);
+  }
 });
 
 async function createUser(BOSSID, userData) {
@@ -98,26 +187,6 @@ async function createUser(BOSSID, userData) {
   } finally {
     hideLoader();
   }
-}
-
-const openSondeButton = document.getElementById("openSonde");
-if (openSondeButton) {
-  openSondeButton.addEventListener("click", () => {
-    switchTab("sondes");
-    const sondesTabButton = document.querySelector(
-      '.tab-button[data-tab="sondes"]',
-    );
-    sondesTabButton?.focus();
-  });
-}
-
-const toggleLoginButton = document.getElementById("toggleLogin");
-if (toggleLoginButton) {
-  toggleLoginButton.addEventListener("click", () => {
-    const section = document.getElementById("login-section");
-    if (!section) return;
-    section.style.display = section.style.display === "none" ? "block" : "none";
-  });
 }
 
 // 🔐 Charger les infos au démarrage
