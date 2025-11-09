@@ -22,8 +22,7 @@
     "http://localhost:3000/*",
     "https://api.bluconsole.com/*",
     "https://backoffice.epack-manager.com/*",
-    "https://chr-num.odoo.com/*",
-    "https://raw.githubusercontent.com/*"
+    "https://chr-num.odoo.com/*"
   ],
   "background": {
     "service_worker": "background.js",
