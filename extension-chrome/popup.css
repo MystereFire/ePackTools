@@ -37,6 +37,24 @@ body {
   overflow: visible;
 }
 
+.version-badge {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.version-badge.outdated {
+  background: rgba(255, 176, 0, 0.95);
+  color: #1d1200;
+}
+
 h1,
 h2 {
   color: var(--text-light);

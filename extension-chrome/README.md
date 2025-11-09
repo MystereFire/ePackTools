@@ -25,6 +25,8 @@ Le code de l'extension est maintenant découpé en modules ES6 commentés :
 - `scripts/api.js` : appels réseau vers Odoo pour récupérer clients/managers et paramètres.
 - `scripts/utils.js` : utilitaires généraux (normalisation, langues, cookies...).
 - `logger.js` : petit logger coloré utilisé par le service worker et le popup.
+- un badge de version (dans `popup.html`/`popup.js`) compare automatiquement la version locale
+  à celle publiée sur GitHub et avertit l'utilisateur quand une mise à jour est disponible.
 
 Tous ces fichiers utilisent désormais la syntaxe `import`/`export` et sont
 documentés par des commentaires JSDoc pour faciliter la compréhension.

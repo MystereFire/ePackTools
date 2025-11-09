@@ -7,6 +7,10 @@ import {
 } from "./scripts/popup-ui.js";
 import { sondeUtils } from "./scripts/sondes.js";
 import { bluconsoleApi } from "./scripts/bluconsole.js";
+import { logger } from "./logger.js";
+
+const REMOTE_MANIFEST_URL =
+  "https://raw.githubusercontent.com/MystereFire/ePackTools/main/extension-chrome/manifest.json";
 import { resetOdooSession } from "./scripts/odoo-stock.js";
 import {
   normalizeText,
@@ -30,6 +34,56 @@ const closeSettingsButton = document.getElementById("closeSettings");
 const container = document.querySelector(".container");
 const feedbackLayer = document.querySelector(".feedback-layer");
 const MIN_POPUP_HEIGHT = 300;
+
+function normalizeVersionParts(version = "") {
+  return version
+    .split(".")
+    .map((part) => parseInt(part, 10))
+    .map((num) => (Number.isNaN(num) ? 0 : num));
+}
+
+function compareVersions(localVersion, remoteVersion) {
+  const localParts = normalizeVersionParts(localVersion);
+  const remoteParts = normalizeVersionParts(remoteVersion);
+  const len = Math.max(localParts.length, remoteParts.length);
+  for (let i = 0; i < len; i += 1) {
+    const l = localParts[i] ?? 0;
+    const r = remoteParts[i] ?? 0;
+    if (l > r) return 1;
+    if (l < r) return -1;
+  }
+  return 0;
+}
+
+async function fetchRemoteManifestVersion() {
+  const response = await fetch(REMOTE_MANIFEST_URL, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  const manifest = await response.json();
+  return manifest?.version ?? null;
+}
+
+function checkExtensionVersion(currentVersion, badgeEl) {
+  fetchRemoteManifestVersion()
+    .then((remoteVersion) => {
+      if (!remoteVersion || !badgeEl) return;
+      if (compareVersions(currentVersion, remoteVersion) < 0) {
+        badgeEl.classList.add("outdated");
+        badgeEl.title = `Nouvelle version disponible (${remoteVersion})`;
+        updateOutput(
+          `Une nouvelle version (${remoteVersion}) est disponible. Vous utilisez ${currentVersion}.`,
+          "info",
+        );
+      } else {
+        badgeEl.title = "Extension à jour";
+      }
+    })
+    .catch((err) => {
+      badgeEl && (badgeEl.title = "Version locale");
+      logger.warn("Impossible de vérifier la version distante", err);
+    });
+}
 
 function updatePopupHeight() {
   requestAnimationFrame(() => {
@@ -191,6 +245,12 @@ async function createUser(BOSSID, userData) {
 // 🔐 Charger les infos au démarrage
 document.addEventListener("DOMContentLoaded", () => {
   const sondeTextarea = document.getElementById("sonde-ids");
+  const versionBadge = document.getElementById("extension-version");
+  if (versionBadge && chrome?.runtime?.getManifest) {
+    const { version } = chrome.runtime.getManifest();
+    versionBadge.textContent = `v${version}`;
+    checkExtensionVersion(version, versionBadge);
+  }
   sondeTextarea.addEventListener("input", () => autoResizeTextarea(sondeTextarea));
   chrome.storage.local.get(
     [
