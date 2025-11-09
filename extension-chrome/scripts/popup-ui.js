@@ -98,13 +98,5 @@ export function updateOutput(message, type = "info") {
  * @param {"info"|"success"|"error"} [type="info"]
  */
 export function updateSondeOutput(message, type = "info") {
-  const outputDiv = document.getElementById("sonde-output");
-  if (!outputDiv) return;
-  outputDiv.style.display = "block";
-  outputDiv.style.backgroundColor =
-    type === "success" ? "#d4edda" : type === "error" ? "#f8d7da" : "#f9f9f9";
-  outputDiv.style.borderColor =
-    type === "success" ? "#c3e6cb" : type === "error" ? "#f5c6cb" : "#ccc";
-  outputDiv.textContent = message;
-  notifyHeightChange();
+  updateOutput(message, type);
 }

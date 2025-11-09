@@ -1,5 +1,5 @@
 // Fonctions de vérification des sondes et hubs
-import { updateSondeOutput } from "./popup-ui.js";
+import { updateSondeOutput, showLoader, hideLoader } from "./popup-ui.js";
 import { fetchSondeStocks } from "./odoo-stock.js";
 import { bluconsoleApi } from "./bluconsole.js";
 
@@ -55,7 +55,7 @@ function formatProbeResult(id, data) {
  * @param {string[]} ids
  * @returns {Promise<string[]>}
  */
-async function verifierSondesListe(ids) {
+async function verifierSondesListe(ids, onProgress) {
   if (!Array.isArray(ids) || ids.length === 0) {
     return [];
   }
@@ -74,11 +74,20 @@ async function verifierSondesListe(ids) {
     line.split(" ")[0].trim().replace(/\s+/g, ""),
   );
   const updatedLines = Array(cleaned.length);
+  const total = cleaned.length;
+  let completed = 0;
+  const notifyProgress =
+    typeof onProgress === "function"
+      ? (done) => onProgress(done, total)
+      : () => {};
+  notifyProgress(0);
 
   await Promise.all(
     cleaned.map(async (cleanId, idx) => {
       if (!cleanId) {
         updatedLines[idx] = "";
+        completed += 1;
+        notifyProgress(completed);
         return;
       }
 
@@ -94,6 +103,9 @@ async function verifierSondesListe(ids) {
           : formatProbeResult(cleanId, data);
       } catch (err) {
         updatedLines[idx] = `${cleanId} ${STATUS_KO}`;
+      } finally {
+        completed += 1;
+        notifyProgress(completed);
       }
     }),
   );
@@ -111,11 +123,29 @@ function verifierSondes() {
     updateSondeOutput("Veuillez entrer au moins un ID.", "error");
     return;
   }
-  verifierSondesListe(rawLines).then((result) => {
-    textarea.value = result.join("\n---\n");
-    chrome.storage.local.set({ lastSondeResults: result });
-    textarea.dispatchEvent(new Event("input"));
-  });
+  const total = rawLines.length;
+  const progressMsg = (done, count) =>
+    `Verification des sondes... ${done}/${count}`;
+  showLoader(progressMsg(0, total));
+
+  verifierSondesListe(rawLines, (done, count) => {
+    showLoader(progressMsg(done, count));
+  })
+    .then((result) => {
+      textarea.value = result.join("\n---\n");
+      chrome.storage.local.set({ lastSondeResults: result });
+      textarea.dispatchEvent(new Event("input"));
+      updateSondeOutput("Verification des sondes terminee.", "success");
+    })
+    .catch((error) => {
+      updateSondeOutput(
+        `Erreur lors de la verification: ${error.message || error}`,
+        "error",
+      );
+    })
+    .finally(() => {
+      hideLoader();
+    });
 }
 
 function recupererStockSondes() {
