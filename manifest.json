@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ePack Manager Creator",
-  "version": "1.0",
+  "version": "2.0.0",
   "description": "Une extension pour gérer les solutions/utilisateurs sur backoffice.epack-manager.com.",
   "permissions": [
     "webRequest",
@@ -22,7 +22,8 @@
     "http://localhost:3000/*",
     "https://api.bluconsole.com/*",
     "https://backoffice.epack-manager.com/*",
-    "https://chr-num.odoo.com/*"
+    "https://chr-num.odoo.com/*",
+    "https://raw.githubusercontent.com/*"
   ],
   "background": {
     "service_worker": "background.js",

@@ -1,6 +1,0 @@
-version: "3.8"
-services:
-  reverseproxy:
-    build: ./reverseproxy
-    ports:
-      - "4002:4002"

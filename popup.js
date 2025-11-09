@@ -10,7 +10,7 @@ import { bluconsoleApi } from "./scripts/bluconsole.js";
 import { logger } from "./logger.js";
 
 const REMOTE_MANIFEST_URL =
-  "https://raw.githubusercontent.com/MystereFire/ePackTools/main/extension-chrome/manifest.json";
+  "https://raw.githubusercontent.com/MystereFire/ePackTools/main/manifest.json";
 import { resetOdooSession } from "./scripts/odoo-stock.js";
 import {
   normalizeText,
