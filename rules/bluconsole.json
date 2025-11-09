@@ -1,0 +1,25 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        {
+          "header": "origin",
+          "operation": "set",
+          "value": "https://api.bluconsole.com"
+        },
+        {
+          "header": "referer",
+          "operation": "set",
+          "value": "https://api.bluconsole.com/"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "||api.bluconsole.com/",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  }
+]

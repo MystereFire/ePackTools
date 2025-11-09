@@ -15,3 +15,6 @@ yarn-error.log*
 *.pem
 *.key
 *.crt
+
+# Artefacts générés par Chrome (Declarative Net Request)
+_metadata/
