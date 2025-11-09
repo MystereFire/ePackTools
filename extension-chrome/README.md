@@ -7,7 +7,7 @@ Elle permet notamment :
 - création automatique de **solutions** et d'**utilisateurs** ;
 - ouverture rapide des **paramètres** liés à une zone ;
 - association d'une solution à des paramètres et à un utilisateur ;
-- vérification de **sondes** et de **hubs** via le proxy BluConsole.
+- vérification de **sondes** et de **hubs** directement via l'API BluConsole intégrée.
 
 La collecte des données (client, manager, paramètres) se fait en arrière‑plan
 par interception des requêtes réseau envoyées par Odoo lors de la
@@ -53,8 +53,7 @@ documentés par des commentaires JSDoc pour faciliter la compréhension.
 - **Vérifier les sondes** : onglet accessible depuis l'icône du thermomètre pour
   se connecter via le proxy et tester une liste d'identifiants.
 
-La section sondes nécessite que le **reverse proxy** soit lancé (voir
-[../reverseproxy](../reverseproxy/README.md)).
+La section sondes communique maintenant directement avec l'API BluConsole et ne dépend plus d'un reverse proxy externe.
 
 Pour plus de détails sur chaque fonctionnalité et le fonctionnement interne,
 se référer aux commentaires dans le code source (`popup.js`, `background.js`,

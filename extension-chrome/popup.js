@@ -5,7 +5,8 @@ import {
   updateOutput,
   updateSondeOutput,
 } from "./scripts/popup-ui.js";
-import { sondeUtils, DEFAULT_PROXY_URL } from "./scripts/sondes.js";
+import { sondeUtils } from "./scripts/sondes.js";
+import { bluconsoleApi } from "./scripts/bluconsole.js";
 import { resetOdooSession } from "./scripts/odoo-stock.js";
 import {
   normalizeText,
@@ -20,8 +21,6 @@ import {
   getLangFromCountry,
   getFlagEmoji,
 } from "./scripts/utils.js";
-
-let proxyURL = DEFAULT_PROXY_URL;
 
 const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
 const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
@@ -197,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     [
       "probeEmail",
       "probePassword",
-      "proxyURL",
       "odooEmail",
       "odooApiKey",
       "sondeIds",
@@ -210,13 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.probePassword) {
         document.getElementById("sonde-password").value = data.probePassword;
       }
-      if (data.proxyURL) {
-        proxyURL = data.proxyURL;
-        document.getElementById("proxy-url").value = data.proxyURL;
-      } else {
-        document.getElementById("proxy-url").value = DEFAULT_PROXY_URL;
-      }
-
       if (data.odooEmail) {
         document.getElementById("odoo-email").value = data.odooEmail;
       }
@@ -239,17 +230,13 @@ document.getElementById("sonde-login-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const email = document.getElementById("sonde-email").value.trim();
   const password = document.getElementById("sonde-password").value.trim();
-  const pUrl =
-    document.getElementById("proxy-url").value.trim() || DEFAULT_PROXY_URL;
   const odooEmail = document.getElementById("odoo-email").value.trim();
   const odooApiKey = document.getElementById("odoo-api-key").value.trim();
-  proxyURL = pUrl;
 
   chrome.storage.local.set(
     {
       probeEmail: email,
       probePassword: password,
-      proxyURL: pUrl,
       odooEmail,
       odooApiKey,
     },
@@ -275,32 +262,16 @@ document.getElementById("testConnexion").addEventListener("click", () => {
     return;
   }
 
-  fetch(`${proxyURL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.token && data.refreshToken) {
-        chrome.storage.local.set({
-          bluconsoleToken: data.token,
-          bluconsoleRefreshToken: data.refreshToken,
-          bluconsoleUser: data.user,
-        });
-        updateSondeOutput(
-          `✅ Connexion réussie via proxy ${proxyURL}!`,
-          "success",
-        );
-      } else {
-        updateSondeOutput(
-          "❌ Connexion échouée : identifiants invalides.",
-          "error",
-        );
-      }
+  bluconsoleApi
+    .login(email, password)
+    .then(() => {
+      updateSondeOutput("Connexion BluConsole reussie.", "success");
     })
     .catch((err) => {
-      updateSondeOutput("❌ Erreur réseau : " + err.message, "error");
+      updateSondeOutput(
+        "Erreur BluConsole : " + (err.message || "Impossible de se connecter."),
+        "error",
+      );
     });
 });
 

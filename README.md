@@ -5,9 +5,9 @@ Il se compose de deux parties principales :
 
 - **extension-chrome/** : une extension Google Chrome pour automatiser la création
   de solutions et d'utilisateurs à partir des données récupérées dans Odoo.
-- **reverseproxy/** : un petit serveur Node.js faisant office de proxy pour
-  l'API BluConsole. Il est utilisé par l'extension pour la vérification des
-  sondes et hubs.
+- **reverseproxy/** : ancien serveur Node.js faisant office de proxy pour
+  l'API BluConsole. L'extension communique désormais directement avec BluConsole,
+  ce dossier est conservé pour référence ou dépannage ponctuel.
 
 Chaque répertoire contient un fichier `README.md` décrivant son fonctionnement en
 
@@ -20,12 +20,7 @@ détail.
    git clone <repo>
    cd ePackTools
    ```
-2. (Optionnel) Lancer le proxy via Docker :
-   ```bash
-   docker-compose up -d
-   ```
-   Le proxy sera alors disponible sur `http://localhost:4002`.
-3. Installer l'extension Chrome en mode développeur et suivre la documentation
+2. Installer l'extension Chrome en mode développeur et suivre la documentation
    du dossier [extension-chrome](extension-chrome/README.md).
 
 ## Documentation
